@@ -1,2 +1,2 @@
-echo "Starting Server..."
+echo "Starting Development Server"
 yarn start:dev
