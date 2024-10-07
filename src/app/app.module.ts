@@ -1,4 +1,4 @@
-import { config } from '@core/config';
+import { config, corsOptions } from '@core/config';
 import express, { Request, Response } from 'express';
 import { dispatch } from './events/app.events';
 import { appRouter } from './app.router';
@@ -28,7 +28,7 @@ export async function startApplication() {
     application.use(helmet());
     application.disable('x-powered-by');
     application.use(compression());
-    application.use(cors());
+    application.use(cors(corsOptions));
     application.use('/v1', appRouter);
     application.use(errorHandler.handle);
 
