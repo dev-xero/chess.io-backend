@@ -1,4 +1,4 @@
-import { dispatch } from '@app/events/app.events';
+import { dispatch } from '@core/events/app.events';
 import { HttpStatus } from '@constants/status.codes';
 import { Request, Response, Router } from 'express';
 import { authService } from './auth.service';

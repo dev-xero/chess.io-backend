@@ -1,6 +1,6 @@
 import { config, corsOptions } from '@core/config';
 import express, { Request, Response } from 'express';
-import { dispatch } from './events/app.events';
+import { dispatch } from '../core/events/app.events';
 import { appRouter } from './app.router';
 import helmet from 'helmet';
 import * as parser from 'body-parser';

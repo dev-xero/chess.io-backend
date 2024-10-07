@@ -1,4 +1,4 @@
-import { dispatch } from '@app/events/app.events';
+import { dispatch } from '@core/events/app.events';
 import { PrismaClient } from '@prisma/client';
 
 class DatabaseProvider {

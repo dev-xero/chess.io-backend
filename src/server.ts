@@ -1,4 +1,4 @@
-import { dbProvider } from '@app/providers';
+import { dbProvider } from '@core/providers';
 import { startApplication } from './app';
 import { shutdown } from '@core/utils/shutdown';
 

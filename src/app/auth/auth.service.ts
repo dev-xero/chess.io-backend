@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { IRegisterRequest } from './interfaces/i.auth.register';
-import { dbProvider } from '@app/providers';
+import { dbProvider } from '@core/providers';
 
 class AuthService {
     private dbClient: PrismaClient;
