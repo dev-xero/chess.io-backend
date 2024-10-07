@@ -1,3 +1,9 @@
-type EvMapParams = {
-  [K in keyof typeof registry]: Record<string, string>;
+import registry from './events.registry';
+
+type EventHandler = () => void;
+
+type EvMapParam = {
+    [event: string]: EventHandler[];
 };
+
+export { EvMapParam };
