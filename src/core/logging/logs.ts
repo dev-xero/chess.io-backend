@@ -15,7 +15,7 @@ export function productionLogger() {
         format: combine(colorize(), timestamp(), logFormat()),
         transports: [
             new transports.File({
-                filename: join(root.toString(), 'serverlogs/prod.log')
+                filename: join(root.toString(), 'logs/prod.log')
             })
         ]
     });
@@ -27,7 +27,7 @@ export function developmentLogger() {
         transports: [
             new transports.Console(),
             new transports.File({
-                filename: join(root.toString(), 'serverlogs/dev.log')
+                filename: join(root.toString(), 'logs/dev.log')
             })
         ]
     });
