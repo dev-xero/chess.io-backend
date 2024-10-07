@@ -8,11 +8,12 @@ datasource db {
 }
 
 model Player {
-  id       String       @id @default(uuid())
-  username String       @unique
-  password String
-  rating   Int
-  stats    PlayerStats?
+  id             String       @id @default(uuid())
+  username       String       @unique
+  password       String
+  secretQuestion String
+  rating         Int
+  stats          PlayerStats?
 }
 
 model PlayerStats {

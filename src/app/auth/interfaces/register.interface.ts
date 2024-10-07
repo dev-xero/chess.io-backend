@@ -1,4 +1,4 @@
-export interface IRegisterRequest {
+export interface IRegisterUser {
     username: string;
     password: string;
     secretQuestion: string;

@@ -15,6 +15,7 @@ const registry = {
                 err.message
             )
     ],
+    'auth:registered': [() => logger.info('successfully registered new user.')],
     'event:registration:successful': [
         () => logger.info('Events listeners registered.')
     ],
