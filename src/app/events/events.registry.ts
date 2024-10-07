@@ -8,6 +8,13 @@ const registry = {
                 `Server started at ${config.app.address} in ${config.app.environment.mode} environment.`
             )
     ],
+    'app:internal:error': [
+        (err: Error) =>
+            logger.error(
+                'An internal server error occurred.\nError:',
+                err.message
+            )
+    ],
     'event:registration:successful': [
         () => logger.info('Events listeners registered.')
     ],
