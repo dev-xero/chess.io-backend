@@ -1,4 +1,4 @@
-import { HttpStatus } from 'src/constants';
+import { HttpStatus } from '@constants/index';
 import { ApplicationError, ErrorDetailsDescriptor } from './application.error';
 
 export class NotFoundError extends ApplicationError {

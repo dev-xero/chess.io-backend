@@ -1,13 +1,13 @@
 import { config } from '@core/config';
 import express, { Request, Response } from 'express';
 import { dispatch } from './events/app.events';
-import { HttpStatus } from 'src/constants';
 import { appRouter } from './app.router';
 import helmet from 'helmet';
 import * as parser from 'body-parser';
 import compression from 'compression';
 import cors from 'cors';
 import { NotFoundErrorHandler } from '@core/handlers';
+import { HttpStatus } from '@constants/index';
 
 export async function startApplication() {
     const application = express();

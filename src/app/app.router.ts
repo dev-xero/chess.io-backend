@@ -1,5 +1,5 @@
+import { HttpStatus } from '@constants/index';
 import { Request, Response, Router } from 'express';
-import { HttpStatus } from 'src/constants';
 
 export const appRouter = Router();
 

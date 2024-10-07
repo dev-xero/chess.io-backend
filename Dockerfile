@@ -16,6 +16,7 @@ COPY --from=build /app/build ./build
 COPY package.json yarn.lock ./
 
 RUN yarn install --production --frozen-lockfile
+RUN yarn prisma migrate deploy
 
-EXPOSE 4000
+EXPOSE 8080
 CMD ["node", "--experimental-specifier-resolution=node", "build/server.js"]
