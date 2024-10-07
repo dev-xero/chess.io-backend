@@ -21,7 +21,8 @@
         "baseUrl": "./",
         "paths": {
             "@app/*": ["src/app/*"],
-            "@core/*": ["src/core/*"]
+            "@core/*": ["src/core/*"],
+            "@constants/*": ["src/constants/*"]
         }
     },
     "ts-node": {
