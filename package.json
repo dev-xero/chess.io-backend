@@ -7,6 +7,7 @@
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "prisma:fmt": "npx prisma format",
+        "prisma:mgr": "npx prisma migrate dev --name init",
         "clean": "rm -rf build tsconfig.tsbuildinfo",
         "build": "tsc && tsc-alias",
         "start:prod": "npm run build && node --experimental-specifier-resolution=node build/server.js",
@@ -38,6 +39,7 @@
         "typescript-eslint": "^8.8.0"
     },
     "dependencies": {
+        "@prisma/client": "^5.20.0",
         "app-root-path": "^3.1.0",
         "dotenv": "^16.4.5",
         "eventemitter2": "^6.4.9",

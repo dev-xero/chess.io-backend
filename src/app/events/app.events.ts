@@ -24,7 +24,7 @@ class AppEventManager extends EventManager {
         });
     }
 
-    public dispatch(event: string, ...values: EvMapParam[]) {
+    public dispatch(event: string, ...values: any[]) {
         this.emit(event, ...values);
     }
 }

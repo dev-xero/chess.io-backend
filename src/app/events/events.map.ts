@@ -1,6 +1,4 @@
-import registry from './events.registry';
-
-type EventHandler = () => void;
+type EventHandler = (...args: any[]) => void;
 
 type EvMapParam = {
     [event: string]: EventHandler[];
