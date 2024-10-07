@@ -1,5 +1,6 @@
 # build
 build/
+tsconfig.tsbuildinfo
 
 # secrets
 .env
