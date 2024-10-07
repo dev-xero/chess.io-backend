@@ -1,0 +1,32 @@
+# secrets
+.env
+.env.local
+.env.development
+.env.production
+.env.docker
+
+
+# node modules
+node_modules/
+
+# log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# os files
+.DS_Store
+Thumbs.db
+
+
+# lock files
+package-lock.json
+
+# docker related
+docker-compose.override.yml
+*.log
+
+# ides
+.vscode/
+*.swp
+.history/
