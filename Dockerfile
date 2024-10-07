@@ -18,4 +18,4 @@ COPY package.json yarn.lock ./
 RUN yarn install --production --frozen-lockfile
 
 EXPOSE 4000
-CMD ["node", "build/server.js"]
+CMD ["node", "--experimental-specifier-resolution=node build/server.js"]
