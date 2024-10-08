@@ -9,11 +9,13 @@ import cors from 'cors';
 import { NotFoundErrorHandler } from '@core/handlers';
 import { HttpStatus } from '@constants/index';
 import { authRouter } from './auth/auth.module';
+import { ErrorHandler } from '@core/middlewares';
 
 export async function startApplication() {
     const application = express();
     const port = config.app.port;
-    const errorHandler = new NotFoundErrorHandler();
+    const notFoundHandler = new NotFoundErrorHandler();
+    const errorHandler = new ErrorHandler();
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
@@ -33,6 +35,7 @@ export async function startApplication() {
     application.use('/v1', appRouter);
     application.use('/v1/auth', authRouter);
     application.use(errorHandler.handle);
+    application.use(notFoundHandler.handle);
 
     application.listen(port, () => dispatch('app:up'));
 }

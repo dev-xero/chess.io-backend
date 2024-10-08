@@ -10,4 +10,4 @@ export const HttpStatus = {
     NOT_WHITELISTED: 409,
     UNPROCESSABLE: 422,
     INTERNAL_SERVER_ERROR: 500
-} as const;
+};

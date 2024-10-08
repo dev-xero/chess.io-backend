@@ -1,9 +1,13 @@
+import { BadRequestError } from '@core/errors';
+import { dispatch } from '@core/events';
 import { PrismaClient } from '@prisma/client';
-import { dbProvider } from '@core/providers';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
+import { userService } from '@app/user';
 import { HttpStatus } from '@constants/index';
-import { dispatch } from '@core/events/app.events';
 import { IRegisterUser } from './interfaces/register.interface';
+import { joiValidate } from '@core/utils/validator';
+import { registerRequestBody } from '@core/schemas';
+import { dbProvider } from '@core/providers';
 
 class AuthService {
     private dbClient: PrismaClient;
@@ -12,12 +16,14 @@ class AuthService {
         this.dbClient = client;
     }
 
-    public async register(req: Request, res: Response) {
-        // extract payload from request
-        const user: IRegisterUser = req.body;
+    public async register(req: Request, res: Response, next: NextFunction) {
+        const body: IRegisterUser = req.body;
         try {
-            // TODO: actual data processing
-            
+            joiValidate(registerRequestBody, body);
+
+            const duplicate = await userService.userExists(body.username);
+            if (!duplicate)
+                throw new BadRequestError('This user already exists.');
 
             dispatch('auth:registered');
             res.status(HttpStatus.CREATED).json({
@@ -25,13 +31,9 @@ class AuthService {
                 success: true,
                 code: HttpStatus.CREATED
             });
-        } catch {
-            dispatch('app:internal:error');
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-                message: 'Internal server error occurred.',
-                success: false,
-                code: HttpStatus.INTERNAL_SERVER_ERROR
-            });
+        } catch (err) {
+            dispatch('app:internal:error', [err]);
+            next(err);
         }
     }
 
