@@ -13,6 +13,13 @@ authRouter.post(
 authRouter.post(
     '/login',
     async (req: Request, res: Response, next: NextFunction) => {
-        await authService.login(req, res, next)
+        await authService.login(req, res, next);
+    }
+);
+
+authRouter.get(
+    '/logout',
+    async (req: Request, res: Response, next: NextFunction) => {
+        await authService.logout(req, res, next);
     }
 );

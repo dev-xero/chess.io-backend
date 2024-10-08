@@ -1,6 +1,6 @@
 import { BadRequestError } from '@core/errors';
 import { dispatch } from '@core/events';
-import { PrismaClient } from '@prisma/client';
+import { Player, PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import { userService } from '@app/user';
 import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';
@@ -111,7 +111,56 @@ class AuthService {
         }
     }
 
-    public async logout() {}
+    public async logout(req: Request, res: Response, next: NextFunction) {
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            return res.status(HttpStatus.UNAUTHORIZED).json({
+                message: 'Bearer token required.',
+                success: false,
+                code: HttpStatus.UNAUTHORIZED
+            });
+        }
+
+        try {
+            const token = authHeader.split(' ')[1];
+            let decodedToken;
+
+            try {
+                decodedToken = this.tokens.verifyToken(token);
+            } catch (error) {
+                return res.status(HttpStatus.UNAUTHORIZED).json({
+                    message: 'Invalid token provided.',
+                    success: false,
+                    code: HttpStatus.UNAUTHORIZED
+                });
+            }
+
+            const username = (decodedToken as Player)?.username;
+            if (!username) {
+                return res.status(HttpStatus.UNAUTHORIZED).json({
+                    message: 'Invalid token payload.',
+                    success: false,
+                    code: HttpStatus.UNAUTHORIZED
+                });
+            }
+
+            await userService.update(username, {
+                authToken: ''
+            });
+
+            dispatch('auth:logged_out', username);
+
+            res.status(HttpStatus.OK).json({
+                message: 'Logged out successfully',
+                success: true,
+                code: HttpStatus.OK
+            });
+        } catch (err) {
+            dispatch('app:internal:error', [err]);
+            next(err);
+        }
+    }
 }
 
 export const authService = new AuthService();

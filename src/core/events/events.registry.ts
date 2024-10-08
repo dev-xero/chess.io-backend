@@ -16,6 +16,7 @@ const registry = {
             )
     ],
     'auth:registered': [() => logger.info('successfully registered new user.')],
+    'auth:logged_out': [() => logger.info('successfully logged out a user.')],
     'event:registration:successful': [
         () => logger.info('Events listeners registered.')
     ],
