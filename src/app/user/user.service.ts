@@ -30,6 +30,7 @@ class UserService {
                 username: newUser.username,
                 password: newUser.password,
                 secretQuestion: newUser.secretQuestion,
+                authToken: newUser.authToken,
                 rating: 1200
             }
         });
