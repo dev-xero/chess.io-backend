@@ -1,16 +1,15 @@
 import { BadRequestError } from '@core/errors';
 import { dispatch } from '@core/events';
-import { Player, PrismaClient } from '@prisma/client';
+import { Player } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import { userService } from '@app/user';
 import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';
-import { IRegisterUser } from './interfaces/register.interface';
 import { validateReqBody } from '@core/utils/validator';
 import { registerReqBody } from '@core/schemas';
 import { JWT, encryption, omitFields } from '@core/utils';
 import { config } from '@core/config';
-import { ILoginRequest } from './interfaces/login.interface';
 import { loginReqBody } from '@core/schemas/login.req.schema';
+import { ILoginRequest, IRegisterUser } from './interfaces';
 
 class AuthService {
     private tokens: JWT;
