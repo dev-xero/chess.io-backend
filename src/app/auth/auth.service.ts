@@ -22,8 +22,9 @@ class AuthService {
             joiValidate(registerRequestBody, body);
 
             const duplicate = await userService.userExists(body.username);
-            if (!duplicate)
+            if (duplicate) {
                 throw new BadRequestError('This user already exists.');
+            }
 
             dispatch('auth:registered');
             res.status(HttpStatus.CREATED).json({

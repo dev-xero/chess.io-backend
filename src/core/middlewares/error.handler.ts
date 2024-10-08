@@ -22,8 +22,9 @@ export class ErrorHandler {
         if (statusCode == HttpStatus.INTERNAL_SERVER_ERROR) logger.error(error);
 
         res.status(statusCode).send({
-            status: false,
             error: message,
+            success: false,
+            code: statusCode,
             endpoint: req.url.trim(),
             method: req.method,
             timestamp: new Date().toDateString()
