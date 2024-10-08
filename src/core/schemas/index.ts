@@ -1,1 +1,1 @@
-export * from './register.request.schema';
+export * from './register.req.schema';

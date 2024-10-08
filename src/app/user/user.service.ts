@@ -24,6 +24,15 @@ class UserService {
         return record ? true : false;
     }
 
+    public async findUser(username: string): Promise<Player | null> {
+        const record = await this.dbClient.player.findUnique({
+            where: {
+                username: username
+            }
+        });
+        return record;
+    }
+
     public async create(newUser: IRegisterUser): Promise<Player> {
         const record = await this.dbClient.player.create({
             data: {

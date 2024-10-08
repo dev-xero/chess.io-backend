@@ -12,7 +12,7 @@ class Encryption {
         return hash;
     }
 
-    public compare(plain: string, encrypted: string): boolean {
+    public matches(plain: string, encrypted: string): boolean {
         return bcrypt.compareSync(plain, encrypted);
     }
 }
