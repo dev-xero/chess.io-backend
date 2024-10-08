@@ -29,13 +29,12 @@ class AuthService {
 
             body.password = encryption.encrypt(body.password);
 
-            const newUser = await userService.create(body);
             const authToken = this.tokens.generateToken({
-                id: newUser.id,
-                username: newUser.username
+                username: body.username
             });
 
-            const updatedUser = await userService.update(newUser.username, {
+            const newUser = await userService.create({
+                ...body,
                 authToken
             });
 
@@ -46,7 +45,7 @@ class AuthService {
                 success: true,
                 code: HttpStatus.CREATED,
                 payload: {
-                    user: omitFields(updatedUser, [
+                    user: omitFields(newUser, [
                         'password',
                         'secretQuestion',
                         'authToken'
