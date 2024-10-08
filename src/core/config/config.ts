@@ -1,5 +1,5 @@
-import * as dotenv from 'dotenv';
 import { ENVIRONMENT } from '../utils';
+import dotenv from 'dotenv';
 
 dotenv.config();
 
@@ -16,7 +16,8 @@ export const config = Object.freeze({
             process.env.NODE_ENV == ENVIRONMENT.PROD
                 ? process.env.REMOTE_URL
                 : `http://localhost:${process.env.PORT}`
+    },
+    auth: {
+        secret: process.env.JWT_SECRET || ''
     }
 });
-
-export default config;

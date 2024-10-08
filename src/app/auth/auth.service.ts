@@ -3,17 +3,18 @@ import { dispatch } from '@core/events';
 import { PrismaClient } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
 import { userService } from '@app/user';
-import { HttpStatus } from '@constants/index';
+import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';
 import { IRegisterUser } from './interfaces/register.interface';
 import { joiValidate } from '@core/utils/validator';
 import { registerRequestBody } from '@core/schemas';
-import { dbProvider } from '@core/providers';
+import { JWT, encryption, omitFields } from '@core/utils';
+import { config } from '@core/config';
 
 class AuthService {
-    private dbClient: PrismaClient;
+    private tokens: JWT;
 
-    constructor(client: PrismaClient) {
-        this.dbClient = client;
+    constructor() {
+        this.tokens = new JWT(config.auth.secret);
     }
 
     public async register(req: Request, res: Response, next: NextFunction) {
@@ -26,11 +27,35 @@ class AuthService {
                 throw new BadRequestError('This user already exists.');
             }
 
+            body.password = encryption.encrypt(body.password);
+
+            const newUser = await userService.create(body);
+            const authToken = this.tokens.generateToken({
+                id: newUser.id,
+                username: newUser.username
+            });
+
+            const updatedUser = await userService.update(newUser.username, {
+                authToken
+            });
+
             dispatch('auth:registered');
+
             res.status(HttpStatus.CREATED).json({
                 message: 'Player registered successfully.',
                 success: true,
-                code: HttpStatus.CREATED
+                code: HttpStatus.CREATED,
+                payload: {
+                    user: omitFields(updatedUser, [
+                        'password',
+                        'secretQuestion',
+                        'authToken'
+                    ]),
+                    auth: {
+                        token: authToken,
+                        expiresIn: TOKEN_EXPIRES_IN
+                    }
+                }
             });
         } catch (err) {
             dispatch('app:internal:error', [err]);
@@ -43,4 +68,4 @@ class AuthService {
     public async logout() {}
 }
 
-export const authService = new AuthService(dbProvider.client);
+export const authService = new AuthService();

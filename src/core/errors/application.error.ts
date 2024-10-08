@@ -1,6 +1,6 @@
 export type ErrorDetailsDescriptor = Array<{
     message: string;
-    path: String;
+    path: string;
 }> | null;
 
 export abstract class ApplicationError extends Error {

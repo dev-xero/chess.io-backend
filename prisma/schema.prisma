@@ -12,6 +12,7 @@ model Player {
   username       String       @unique
   password       String
   secretQuestion String
+  authToken      String?
   rating         Int
   stats          PlayerStats?
 }
