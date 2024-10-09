@@ -14,7 +14,7 @@ class DatabaseProvider {
             await this.prisma.$connect();
             dispatch('db:setup:success');
         } catch (error) {
-            dispatch('db:setup:failed', error);
+            dispatch('db:setup:failed', [error]);
             throw new Error('db setup failed.');
         }
     }

@@ -23,7 +23,7 @@ const registry = {
     'db:setup:success': [() => logger.info('Database connected successfully.')],
     'db:setup:failed': [
         (err: Error) =>
-            logger.error('Database failed to connect.\nError:', err.message)
+            logger.error('Database failed to connect.\nError:', err)
     ],
     'db:disconnected': [() => logger.warn('Database disconnected.')],
     'game:update': [() => logger.info('Game update dispatched.')],
