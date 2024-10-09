@@ -32,7 +32,7 @@ export class ChallengeService {
                 payload: {
                     link: `accept/${challengeID}`,
                     duration: duration,
-                    expiresIn: '24hr'
+                    expiresIn: '30mins'
                 }
             });
         } catch (err) {
@@ -48,7 +48,7 @@ export class ChallengeService {
     ) {
         try {
             const { challengeID } = req.params;
-            console.log("challengeID:", challengeID);
+            console.log('challengeID:', challengeID);
             const acceptingUser: UserReq = req.user;
 
             const acceptedGame = await this.gameModule.acceptPendingGame(
