@@ -14,7 +14,7 @@ import { createServer } from 'http';
 import { WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
 import { createChallengeRouter } from './challenge/challenge.module';
-import { GameService } from './game';
+import { GameService, createGameRouter } from './game';
 import { ChallengeService } from './challenge';
 
 export async function startApplication() {
@@ -26,7 +26,7 @@ export async function startApplication() {
     const httpServer = createServer(application);
     const redisClient = new RedisClient();
     const webSocketManager = new WebSocketManager(httpServer, redisClient);
-    const gameModule = new GameService(redisClient, webSocketManager);
+    const gameService = new GameService(redisClient, webSocketManager);
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
@@ -37,8 +37,9 @@ export async function startApplication() {
         });
     });
 
-    const challengeService = new ChallengeService(gameModule);
+    const challengeService = new ChallengeService(gameService);
     const challengeRouter = createChallengeRouter(challengeService);
+    const gameRouter = createGameRouter(gameService);
 
     application.use(express.json());
     application.use(parser.urlencoded({ extended: false }));
@@ -49,6 +50,7 @@ export async function startApplication() {
     application.use('/v1', appRouter);
     application.use('/v1/auth', authRouter);
     application.use('/v1/challenge', challengeRouter);
+    application.use('/v1/game', gameRouter);
     application.use(errorHandler.handle);
     application.use(notFoundHandler.handle);
 

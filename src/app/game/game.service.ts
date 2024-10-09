@@ -40,11 +40,16 @@ export class GameService {
         return JSON.parse(gameData.state);
     }
 
-    private async getFullGameData(
-        gameID: string
-    ): Promise<FullGameData | null> {
+    private async setGameState(
+        gameId: string,
+        state: GameState
+    ): Promise<void> {
+        await this.redisClient.hset(gameId, 'state', JSON.stringify(state));
+    }
+
+    public async getFullGameData(gameID: string): Promise<FullGameData | null> {
         try {
-            const gameData = await this.redisClient.hgetall(gameID);
+            const gameData = await this.redisClient.hgetall(`game:${gameID}`);
             if (!gameData) return null;
             return {
                 whitePlayer: gameData.whitePlayer,
@@ -55,13 +60,6 @@ export class GameService {
             logger.error(`Error making move: ${err}`);
             throw err;
         }
-    }
-
-    private async setGameState(
-        gameId: string,
-        state: GameState
-    ): Promise<void> {
-        await this.redisClient.hset(gameId, 'state', JSON.stringify(state));
     }
 
     public async createGame(
