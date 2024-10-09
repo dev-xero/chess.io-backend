@@ -15,14 +15,25 @@ export class ChallengeService {
         try {
             const user: UserReq = req.user;
             const challengeID = uuidv4();
+            const duration = req.query['duration']
+                ? parseInt(req.query['duration'] as string, 10)
+                : 600; // 5 mins default
 
-            await this.gameModule.createPendingGame(challengeID, user.username);
+            await this.gameModule.createPendingGame(
+                user.username,
+                challengeID,
+                duration
+            );
 
             res.status(HttpStatus.CREATED).json({
                 message: 'Challenge link created.',
                 success: true,
                 code: HttpStatus.CREATED,
-                link: `accept/${challengeID}`
+                payload: {
+                    link: `accept/${challengeID}`,
+                    duration: duration,
+                    expiresIn: '24hr'
+                }
             });
         } catch (err) {
             logger.error('Failed to generate challenge link', err);
@@ -37,23 +48,22 @@ export class ChallengeService {
     ) {
         try {
             const { challengeID } = req.params;
+            console.log("challengeID:", challengeID);
             const acceptingUser: UserReq = req.user;
-            const duration = req.query['duration']
-                ? parseInt(req.query['duration'] as string, 10)
-                : 600; // 5 mins default
 
-            const gameID = await this.gameModule.acceptPendingGame(
+            const acceptedGame = await this.gameModule.acceptPendingGame(
                 challengeID,
-                acceptingUser.username,
-                duration
+                acceptingUser.username
             );
 
-            if (gameID) {
+            console.log(acceptedGame);
+
+            if (acceptedGame) {
                 res.status(HttpStatus.OK).json({
                     message: 'Challenge accepted, game created.',
                     success: true,
                     code: HttpStatus.OK,
-                    gameID
+                    payload: acceptedGame
                 });
             } else {
                 res.status(HttpStatus.NOT_FOUND).json({
