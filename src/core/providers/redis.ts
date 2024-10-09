@@ -17,4 +17,41 @@ export class RedisClient {
             process.exit(1);
         });
     }
+
+    async hmset(key: string, data: Record<string, any>): Promise<'OK'> {
+        return this.client.hmset(key, data);
+    }
+
+    async hgetall(key: string): Promise<Record<string, string> | null> {
+        return this.client.hgetall(key);
+    }
+
+    async expire(key: string, seconds: number): Promise<number> {
+        return this.client.expire(key, seconds);
+    }
+
+    async sadd(key: string, member: string): Promise<number> {
+        return this.client.sadd(key, member);
+    }
+
+    async smembers(key: string): Promise<string[]> {
+        return this.client.smembers(key);
+    }
+
+    async publish(channel: string, message: string): Promise<number> {
+        return this.client.publish(channel, message);
+    }
+
+    async subscribe(
+        channel: string,
+        callback: (message: string) => void
+    ): Promise<void> {
+        const subscriber = this.client.duplicate();
+        await subscriber.subscribe(channel);
+        subscriber.on('message', (ch, message) => {
+            if (ch === channel) {
+                callback(message);
+            }
+        });
+    }
 }
