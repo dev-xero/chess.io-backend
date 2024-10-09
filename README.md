@@ -8,13 +8,16 @@ This repository contains code that powers chess.io's gameplay, user authenticati
 
 All endpoints aside from the base must be prefixed with `/v1` before requests are handled.
 
-1. **GET** `/` - Base endpoint.
-2. **GET** `/v1/health` - Health checks, returns a 200 if the server is up.
-3. **POST** `/v1/auth/register` - Registers a new user and generates an authentication token if successful.
-4. **POST** `/v1/auth/login` - Logs in a user after validating credentials, returns an authentication token.
-5. **POST** `/v1/auth/logout` (Requires Bearer) - Attempts to log a user out after verifying their authorization token. Denies the request if the token is invalid / blacklisted.
-6. **POST** `/v1/challenge/create` (Requires Bearer) - Creates a pending chess challenge, expires in 30 mins if unused.
-7. **POST** `/v1/challenge/accept/:id` (Requires Bearer) - Accepts and assigns the opponent to the challenge specified by the id.
+| Method | Endpoint | Requires Auth | Description |
+|--------|-------------|-----------------|-------------|
+| **GET** | `/` | False | Base endpoint. |
+| **GET** | `/v1/health` | False | Health checks, returns a 200 if the server is up. |
+| **POST** | `/v1/auth/register` | False | Registers a new user and generates an authentication token if successful. |
+| **POST** | `/v1/auth/login` | False | Logs in a user after validating credentials, returns an authentication token. |
+| **POST** | `/v1/auth/logout` | True | Attempts to log a user out after verifying their authorization token. Denies the request if the token is invalid / blacklisted. |
+| **POST** | `/v1/challenge/create` | True | Creates a pending chess challenge, expires in 30 mins if unused. |
+| **POST** | `/v1/challenge/accept/:id` | True | Accepts and assigns the opponent to the challenge specified by the id. |
+| **GET** | `/v1/game/state/:id` | True | Returns a payload containing the current game position and other metadata. |
 
 ## Configuration
 
