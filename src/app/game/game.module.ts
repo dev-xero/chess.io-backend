@@ -108,6 +108,10 @@ export class GameModule {
             return null;
         }
 
+        if (pendingGame.challenger == acceptingUsername) {
+            return null
+        }
+
         const gameID = `game:${Date.now()}`;
         const duration = parseInt(pendingGame.duration, 10);
        
