@@ -14,7 +14,7 @@ import { createServer } from 'http';
 import { WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
 import { createChallengeRouter } from './challenge/challenge.module';
-import { GameModule } from './game';
+import { GameService } from './game';
 import { ChallengeService } from './challenge';
 
 export async function startApplication() {
@@ -26,7 +26,7 @@ export async function startApplication() {
     const httpServer = createServer(application);
     const redisClient = new RedisClient();
     const webSocketManager = new WebSocketManager(httpServer, redisClient);
-    const gameModule = new GameModule(redisClient, webSocketManager);
+    const gameModule = new GameService(redisClient, webSocketManager);
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({

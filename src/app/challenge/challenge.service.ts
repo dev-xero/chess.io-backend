@@ -1,4 +1,4 @@
-import { GameModule } from '@app/game';
+import { GameService } from '@app/game';
 import { HttpStatus } from '@constants/status.codes';
 import { logger } from '@core/logging';
 import { NextFunction, Request, Response } from 'express';
@@ -9,7 +9,7 @@ interface UserReq {
 }
 
 export class ChallengeService {
-    constructor(private gameModule: GameModule) {}
+    constructor(private gameModule: GameService) {}
 
     public async create(req: Request, res: Response, next: NextFunction) {
         try {
