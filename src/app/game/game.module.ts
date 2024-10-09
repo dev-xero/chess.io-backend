@@ -1,3 +1,4 @@
+import { dispatch } from '@core/events';
 import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
 import { WebSocketManager } from '@core/websocket';
@@ -83,6 +84,7 @@ export class GameModule {
             JSON.stringify({ type: 'game_started', gameID })
         );
 
+        dispatch('game:started', [gameID]);
         return { gameID, duration };
     }
 }

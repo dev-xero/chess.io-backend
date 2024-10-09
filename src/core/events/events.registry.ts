@@ -26,7 +26,8 @@ const registry = {
             logger.error('Database failed to connect.\nError:', err.message)
     ],
     'db:disconnected': [() => logger.warn('Database disconnected.')],
-    'game:update': [() => logger.info('Game update dispatched.')]
+    'game:update': [() => logger.info('Game update dispatched.')],
+    'game:started': [(id: string) => logger.info(`A new game has started. ID: ${id}`)]
 };
 
 export default registry;
