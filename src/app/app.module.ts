@@ -13,7 +13,9 @@ import { ErrorHandler } from '@core/middlewares';
 import { createServer } from 'http';
 import { WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
-import { challengeRouter } from './challenge/challenge.module';
+import { createChallengeRouter } from './challenge/challenge.module';
+import { GameModule } from './game';
+import { ChallengeService } from './challenge';
 
 export async function startApplication() {
     const application = express();
@@ -24,6 +26,7 @@ export async function startApplication() {
     const httpServer = createServer(application);
     const redisClient = new RedisClient();
     const webSocketManager = new WebSocketManager(httpServer, redisClient);
+    const gameModule = new GameModule(redisClient, webSocketManager);
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
@@ -33,6 +36,9 @@ export async function startApplication() {
             code: HttpStatus.OK
         });
     });
+
+    const challengeService = new ChallengeService(gameModule);
+    const challengeRouter = createChallengeRouter(challengeService);
 
     application.use(express.json());
     application.use(parser.urlencoded({ extended: false }));

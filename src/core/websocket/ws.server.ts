@@ -4,9 +4,14 @@ import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
 import { dispatch } from '..';
 
+interface ExtendedWebSocket extends WebSocket {
+    userId?: string;
+}
+
 export class WebSocketManager {
     private wss: WebSocketServer;
-    private gameConnections: Map<string, WebSocket[]> = new Map();
+    private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
+    private userConnections: Map<string, ExtendedWebSocket[]> = new Map();
 
     constructor(
         server: HTTPServer,
@@ -22,8 +27,9 @@ export class WebSocketManager {
 
             ws.on('message', (message: string) => {
                 const data = JSON.parse(message);
-                // add to games
-                if (data.type === 'join_game') {
+                if (data.type === 'auth') {
+                    this.authenticateUser(ws, data.userId);
+                } else if (data.type === 'join_game') {
                     this.addToGame(data.gameId, ws);
                 }
             });
@@ -31,23 +37,69 @@ export class WebSocketManager {
             ws.on('close', () => {
                 logger.info('Websocket connection closed.');
                 this.removeFromGames(ws);
+                this.removeFromUsers(ws);
             });
 
             // subscribe to games with redis
             this.redisClient.subscribe('game_updates', (message) => {
                 const update = JSON.parse(message);
-                dispatch("game:update");
+                dispatch('game:update');
                 this.broadcastToGame(update.gameId, JSON.stringify(update));
             });
         });
     }
 
-    // get this game id and append to game conns
-    private addToGame(gameId: string, ws: WebSocket) {
+    private authenticateUser(ws: ExtendedWebSocket, userId: string) {
+        ws.userId = userId;
+        if (!this.userConnections.has(userId)) {
+            this.userConnections.set(userId, []);
+        }
+        this.userConnections.get(userId)!.push(ws);
+    }
+
+    private addToGame(gameId: string, ws: ExtendedWebSocket) {
         if (!this.gameConnections.has(gameId)) {
             this.gameConnections.set(gameId, []);
         }
         this.gameConnections.get(gameId)!.push(ws);
+    }
+
+    // remove ws connections from games
+    private removeFromGames(ws: ExtendedWebSocket) {
+        this.gameConnections.forEach((connections, gameId) => {
+            const index = connections.indexOf(ws);
+            if (index !== -1) {
+                connections.splice(index, 1);
+                if (connections.length === 0) {
+                    this.gameConnections.delete(gameId);
+                }
+            }
+        });
+    }
+
+    // removes from users map if it exists
+    private removeFromUsers(ws: ExtendedWebSocket) {
+        if (ws.userId) {
+            const userConnections = this.userConnections.get(ws.userId);
+            if (userConnections) {
+                const index = userConnections.indexOf(ws);
+                if (index !== -1) {
+                    userConnections.splice(index, 1);
+                    if (userConnections.length === 0) {
+                        this.userConnections.delete(ws.userId);
+                    }
+                }
+            }
+        }
+    }
+
+    // general purpose broadcasts
+    public broadcast(message: string) {
+        this.wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
     }
 
     public broadcastToGame(gameId: string, message: string) {
@@ -61,25 +113,14 @@ export class WebSocketManager {
         }
     }
 
-    // broadcast ws messages to open connections
-    public broadcast(message: string) {
-        this.wss.clients.forEach((client) => {
-            if (client.readyState == WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    }
-
-    // remove ws conn from its game id
-    private removeFromGames(ws: WebSocket) {
-        this.gameConnections.forEach((connections, gameId) => {
-            const index = connections.indexOf(ws);
-            if (index !== -1) {
-                connections.splice(index, 1);
-                if (connections.length === 0) {
-                    this.gameConnections.delete(gameId);
+    public broadcastToUser(userId: string, message: string) {
+        const connections = this.userConnections.get(userId);
+        if (connections) {
+            connections.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(message);
                 }
-            }
-        });
+            });
+        }
     }
 }

@@ -54,4 +54,8 @@ export class RedisClient {
             }
         });
     }
+
+    async del(key: string) {
+        await this.client.del([key]);
+    }
 }
