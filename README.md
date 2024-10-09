@@ -16,7 +16,7 @@ All endpoints aside from the base must be prefixed with `/v1` before requests ar
 6. **POST** `/v1/challenge/create` (Requires Bearer) - Creates a pending chess challenge, expires in 30 mins if unused.
 7. **POST** `/v1/challenge/accept/:id` (Requires Bearer) - Accepts and assigns the opponent to the challenge specified by the id.
 
-## Setup
+## Configuration
 
 To develop / test the endpoints locally, clone the repo then follow the steps outlined below.
 
