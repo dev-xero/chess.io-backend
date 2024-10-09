@@ -268,6 +268,11 @@
     "@types/connect" "*"
     "@types/node" "*"
 
+"@types/chess.js@^0.13.7":
+  version "0.13.7"
+  resolved "https://registry.yarnpkg.com/@types/chess.js/-/chess.js-0.13.7.tgz#2fe36ae547b2dbacd7696238433354facb556c24"
+  integrity sha512-o9TeeBdFXelFJXOD9+6sT6bbpBvWG0ZbpOnlIyUNXBjewh7xoFS0+BifGc71T45D5E952io3i8dDsaN6hnLaxw==
+
 "@types/compression@^1.7.5":
   version "1.7.5"
   resolved "https://registry.yarnpkg.com/@types/compression/-/compression-1.7.5.tgz#0f80efef6eb031be57b12221c4ba6bc3577808f7"
@@ -701,6 +706,11 @@ chalk@^4.0.0:
   dependencies:
     ansi-styles "^4.1.0"
     supports-color "^7.1.0"
+
+chess.js@^1.0.0-beta.8:
+  version "1.0.0-beta.8"
+  resolved "https://registry.yarnpkg.com/chess.js/-/chess.js-1.0.0-beta.8.tgz#be5e73eabd49e272f41d26bc7fddc93cbcda912f"
+  integrity sha512-UngzUMXmexcQaQA/UEJuJj5vatEy34awYMD5YMOp/FW3HM7lqspp7ymYs5JAmquDq0WROtURRfSffoa/vrCCyw==
 
 chokidar@^3.5.2, chokidar@^3.5.3:
   version "3.6.0"

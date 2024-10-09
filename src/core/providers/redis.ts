@@ -22,6 +22,10 @@ export class RedisClient {
         return this.client.hmset(key, data);
     }
 
+    async hset(key: string, field: string, value: string) {
+        return this.client.hset(key, field, value);
+    }
+
     async hgetall(key: string): Promise<Record<string, string> | null> {
         return this.client.hgetall(key);
     }
