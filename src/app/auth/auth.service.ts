@@ -1,4 +1,4 @@
-import { BadRequestError } from '@core/errors';
+import { UnauthorizedError } from '@core/errors';
 import { dispatch } from '@core/events';
 import { Player } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
@@ -25,7 +25,7 @@ class AuthService {
 
             const duplicate = await userService.userExists(body.username);
             if (duplicate) {
-                throw new BadRequestError('This user already exists.');
+                throw new UnauthorizedError('This user already exists.');
             }
 
             body.password = encryption.encrypt(body.password);
@@ -70,12 +70,12 @@ class AuthService {
 
             const thisUser = await userService.findUser(body.username);
             if (!thisUser) {
-                throw new BadRequestError('This user does not exist.');
+                throw new UnauthorizedError('This user does not exist.');
             }
 
             // compare passwords
             if (!encryption.matches(body.password, thisUser.password)) {
-                throw new BadRequestError('Incorrect password.');
+                throw new UnauthorizedError('Incorrect password.');
             }
 
             const authToken = this.tokens.generateToken({

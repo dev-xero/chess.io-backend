@@ -13,6 +13,7 @@ import { ErrorHandler } from '@core/middlewares';
 import { createServer } from 'http';
 import { WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
+import { challengeRouter } from './challenge/challenge.module';
 
 export async function startApplication() {
     const application = express();
@@ -41,6 +42,7 @@ export async function startApplication() {
     application.use(cors(corsOptions));
     application.use('/v1', appRouter);
     application.use('/v1/auth', authRouter);
+    application.use('/v1/challenge', challengeRouter);
     application.use(errorHandler.handle);
     application.use(notFoundHandler.handle);
 

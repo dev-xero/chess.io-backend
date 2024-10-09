@@ -1,5 +1,4 @@
 import { TOKEN_EXPIRES_IN } from '@constants/encryption';
-import { config } from '@core/config';
 import jwt from 'jsonwebtoken';
 
 export class JWT {
