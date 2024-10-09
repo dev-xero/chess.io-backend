@@ -1,1 +1,1 @@
-export * form './ws.server'
+export * from './ws.server';

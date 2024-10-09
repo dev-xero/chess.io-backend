@@ -19,5 +19,8 @@ export const config = Object.freeze({
     },
     auth: {
         secret: process.env.JWT_SECRET || ''
+    },
+    redis: {
+        uri: process.env.REDIS_URI || ''
     }
 });

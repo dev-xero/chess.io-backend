@@ -10,12 +10,19 @@ import { NotFoundErrorHandler } from '@core/handlers';
 import { HttpStatus } from '@constants/index';
 import { authRouter } from './auth/auth.module';
 import { ErrorHandler } from '@core/middlewares';
+import { createServer } from 'http';
+import { WebSocketManager } from '@core/websocket';
+import { RedisClient } from '@core/providers';
 
 export async function startApplication() {
     const application = express();
     const port = config.app.port;
     const notFoundHandler = new NotFoundErrorHandler();
     const errorHandler = new ErrorHandler();
+
+    const httpServer = createServer(application);
+    const redisClient = new RedisClient();
+    const webSocketManager = new WebSocketManager(httpServer, redisClient);
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
