@@ -27,7 +27,7 @@ interface FullGameData {
     state: GameState;
 }
 
-export class GameServie {
+export class GameService {
     constructor(
         private redisClient: RedisClient,
         private wsManager: WebSocketManager
