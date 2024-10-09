@@ -27,7 +27,13 @@ const registry = {
     ],
     'db:disconnected': [() => logger.warn('Database disconnected.')],
     'game:update': [() => logger.info('Game update dispatched.')],
-    'game:started': [(id: string) => logger.info(`A new game has started. ID: ${id}`)]
+    'game:started': [
+        (id: string) => logger.info(`A new game has started. ID: ${id}`)
+    ],
+    'game:ended': [
+        (id: string, cause: string) =>
+            logger.info(`Game ${id} has ended by ${cause}`)
+    ]
 };
 
 export default registry;

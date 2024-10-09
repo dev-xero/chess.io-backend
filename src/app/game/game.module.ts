@@ -21,6 +21,12 @@ interface GameState {
     isGameOver: boolean;
 }
 
+interface FullGameData {
+    whitePlayer: string;
+    blackPlayer: string;
+    state: GameState;
+}
+
 export class GameModule {
     constructor(
         private redisClient: RedisClient,
@@ -32,6 +38,23 @@ export class GameModule {
         const gameData = await this.redisClient.hgetall(gameID);
         if (!gameData) return null;
         return JSON.parse(gameData.state);
+    }
+
+    private async getFullGameData(
+        gameID: string
+    ): Promise<FullGameData | null> {
+        try {
+            const gameData = await this.redisClient.hgetall(gameID);
+            if (!gameData) return null;
+            return {
+                whitePlayer: gameData.whitePlayer,
+                blackPlayer: gameData.blackPlayer,
+                state: JSON.parse(gameData.state)
+            };
+        } catch (err) {
+            logger.error(`Error making move: ${err}`);
+            throw err;
+        }
     }
 
     private async setGameState(
@@ -109,13 +132,17 @@ export class GameModule {
         }
 
         if (pendingGame.challenger == acceptingUsername) {
-            return null
+            return null;
         }
 
         const gameID = `game:${Date.now()}`;
         const duration = parseInt(pendingGame.duration, 10);
-       
-        await this.createGame(pendingGame.challenger, acceptingUsername, duration);
+
+        await this.createGame(
+            pendingGame.challenger,
+            acceptingUsername,
+            duration
+        );
         await this.redisClient.expire(gameID, 3600 * 24); // Expire in 24 hours if abandoned
 
         await this.redisClient.del(`pending:${challengeID}`); // Remove pending game
@@ -132,5 +159,71 @@ export class GameModule {
 
         dispatch('game:started', [gameID]);
         return { gameID, duration };
+    }
+
+    public async makeMove(gameID: string, playerID: string, move: string) {
+        try {
+            const gameData = await this.getFullGameData(gameID);
+            if (!gameData) return null;
+
+            const chess = new Chess(gameData.state.fen);
+            const playerColor = gameData.whitePlayer == playerID ? 'w' : 'b';
+
+            // validate turn and move
+            if (chess.turn() != playerColor) throw new Error('Not your turn');
+            if (!chess.move(move)) throw new Error('Invalid move');
+
+            const newState: GameState = {
+                ...gameData.state,
+                fen: chess.fen(),
+                pgn: chess.pgn(),
+                turn: chess.turn() as 'w' | 'b',
+                inCheck: chess.inCheck(),
+                isCheckmate: chess.isCheckmate(),
+                isDraw: chess.isDraw(),
+                isGameOver: chess.isGameOver()
+            };
+
+            await this.setGameState(gameID, newState);
+
+            this.wsManager.broadcastToGame(
+                gameID,
+                JSON.stringify({
+                    type: 'move',
+                    move: move,
+                    state: newState
+                })
+            );
+
+            return newState;
+        } catch (err) {
+            logger.error(`Error making move: ${err}`);
+            throw err;
+        }
+    }
+
+    public async handleGameTimeout(gameID: string): Promise<void> {
+        try {
+            const gameData = await this.getFullGameData(gameID);
+            if (!gameData) return;
+
+            const { state } = gameData;
+            state.isGameOver = true;
+
+            await this.setGameState(gameID, state);
+
+            this.wsManager.broadcastToGame(
+                gameID,
+                JSON.stringify({
+                    type: 'game_over',
+                    reason: 'timeout',
+                    winner: state.turn === 'w' ? 'black' : 'white'
+                })
+            );
+
+            dispatch('game:ended', [gameID, 'timeout']);
+        } catch (error) {
+            logger.error(`Error handling game timeout: ${error}`);
+        }
     }
 }
