@@ -1,6 +1,6 @@
 const allowedOrigins: string | RegExp | (string | RegExp)[] = [
-    'localhost:3030',
-    'chess-io.vercel.app'
+    'http://localhost:3030',
+    'https://chessio.vercel.app'
 ];
 
 const allowedMethods: string[] = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
