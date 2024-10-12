@@ -19,6 +19,15 @@ All endpoints aside from the base must be prefixed with `/v1` before requests ar
 | **POST** | `/v1/challenge/accept/:id` | True | Accepts and assigns the opponent to the challenge specified by the id. |
 | **GET** | `/v1/game/state/:id` | True | Returns a payload containing the current game position and other metadata. |
 
+## Technologies Used
+
+1. NodeJS (Typescript) with Express framework.
+2. PostgreSQL.
+3. Redis.
+4. Websockets.
+5. Docker.
+6. Render.
+
 ## Configuration
 
 To develop / test the endpoints locally, clone the repo then follow the steps outlined below.
