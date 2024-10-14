@@ -1,0 +1,39 @@
+name: Deploy Backend to AWS App Runner
+
+on:
+    push:
+        branches:
+            - main
+
+jobs:
+    build-and-deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Log in to Amazon ECR
+              uses: aws-actions/amazon-ecr-login@v1
+
+            - name: Build Docker image
+              run: |
+                  docker build -t chessio-backend .
+                  docker tag chessio-backend:latest 039612890043.dkr.ecr.us-east-1.amazonaws.com/awsxero/chessio-backend:latest
+
+            - name: Push Docker image to Amazon ECR
+              run: |
+                  docker push 039612890043.dkr.ecr.us-east-1.amazonaws.com/awsxero/chessio-backend:latest
+
+            - name: Update App Runner service
+              env:
+                  AWS_REGION: us-east-1
+                  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+              run: |
+                  aws apprunner update-service --service-arn arn:aws:apprunner:us-east-1:039612890043:service/chessio-backend/3f79897fb9f645b681be593f1980507b --source-configuration '{
+                    "ImageRepository": {
+                      "ImageIdentifier": "039612890043.dkr.ecr.us-east-1.amazonaws.com/awsxero/chessio-backend:latest",
+                      "ImageRepositoryType": "ECR"
+                    }
+                  }'
