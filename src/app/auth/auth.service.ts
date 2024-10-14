@@ -146,6 +146,11 @@ class AuthService {
                 throw new BadRequestError('Secret question does not match.');
             }
 
+            // is it same as old password
+            if (encryption.matches(body.newPassword, matchingUser.password)) {
+                throw new BadRequestError("New password is same as the old one, log in instead.")
+            }
+
             const newHashedPassword = encryption.encrypt(body.newPassword);
 
             await userService.update(body.username, {
