@@ -27,6 +27,10 @@ jobs:
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
 
+            - name: 'Create env file'
+              run: |
+                echo "${{ secrets.ENV_VARS }}" > .env.production
+
             - name: Build Docker image
               run: |
                   docker build -t chessio-backend .
