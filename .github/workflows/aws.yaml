@@ -5,6 +5,9 @@ on:
         branches:
             - main
 
+env:
+    AWS_REGION: us-east-1
+
 jobs:
     build-and-deploy:
         runs-on: ubuntu-latest
@@ -13,8 +16,16 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v2
 
-            - name: Log in to Amazon ECR
-              uses: aws-actions/amazon-ecr-login@v1
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
 
             - name: Build Docker image
               run: |
