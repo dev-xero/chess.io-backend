@@ -26,7 +26,7 @@ All endpoints aside from the base must be prefixed with `/v1` before requests ar
 3. Redis.
 4. Websockets.
 5. Docker.
-6. Render.
+6. AWS ECR and App Runner.
 
 ## Configuration
 
