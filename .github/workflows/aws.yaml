@@ -29,7 +29,7 @@ jobs:
 
             - name: 'Create env file'
               run: |
-                echo "${{ secrets.ENV_VARS }}" > .env.production
+                  echo "${{ secrets.ENV_VARS }}" > .env.production
 
             - name: Build Docker image
               run: |
@@ -39,6 +39,13 @@ jobs:
             - name: Push Docker image to Amazon ECR
               run: |
                   docker push 039612890043.dkr.ecr.us-east-1.amazonaws.com/awsxero/chessio-backend:latest
+
+            - name: Wait for App Runner to be ready
+              run: |
+                  while [[ $(aws apprunner describe-service --service-arn arn:aws:apprunner:us-east-1:039612890043:service/chessio-backend/3f79897fb9f645b681be593f1980507b --query "Service.Status" --output text) == "OPERATION_IN_PROGRESS" ]]; do
+                    echo "Waiting for App Runner to be ready..."
+                    sleep 30
+                  done
 
             - name: Update App Runner service
               env:
