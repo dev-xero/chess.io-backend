@@ -36,3 +36,6 @@ docker-compose.override.yml
 .vscode/
 *.swp
 .history/
+
+# terraform
+.terraform/
