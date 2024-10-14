@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '@core/errors';
+import { BadRequestError, UnauthorizedError } from '@core/errors';
 import { dispatch } from '@core/events';
 import { Player } from '@prisma/client';
 import { NextFunction, Request, Response } from 'express';
@@ -10,6 +10,8 @@ import { JWT, encryption, omitFields } from '@core/utils';
 import { config } from '@core/config';
 import { loginReqBody } from '@core/schemas/login.req.schema';
 import { ILoginRequest, IRegisterUser } from './interfaces';
+import { IResetBody } from './interfaces/reset.interface';
+import { logger } from '@core/logging';
 
 class AuthService {
     private tokens: JWT;
@@ -25,7 +27,9 @@ class AuthService {
 
             const duplicate = await userService.userExists(body.username);
             if (duplicate) {
-                throw new UnauthorizedError('This user already exists.');
+                throw new UnauthorizedError(
+                    'This user already exists, log in instead.'
+                );
             }
 
             body.password = encryption.encrypt(body.password);
@@ -70,7 +74,9 @@ class AuthService {
 
             const thisUser = await userService.findUser(body.username);
             if (!thisUser) {
-                throw new UnauthorizedError('This user does not exist.');
+                throw new UnauthorizedError(
+                    'This user does not exist, register instead.'
+                );
             }
 
             // compare passwords
@@ -86,7 +92,7 @@ class AuthService {
                 authToken
             });
 
-            console.log('updated auth token.');
+            console.log('Updated auth token, user logged in.');
 
             res.status(HttpStatus.OK).json({
                 message: 'Log in successful.',
@@ -106,6 +112,56 @@ class AuthService {
             });
         } catch (err) {
             dispatch('app:internal:error', [err]);
+            next(err);
+        }
+    }
+
+    public async resetPassword(
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) {
+        const body: IResetBody = req.body;
+        try {
+            if (!body.username) {
+                throw new BadRequestError(
+                    'Invalid request, provide a username.'
+                );
+            }
+
+            if (!body.newPassword || !body.secretQuestion) {
+                throw new BadRequestError(
+                    'Provide both the secret question and new password.'
+                );
+            }
+
+            // find user with this credential
+            const matchingUser = await userService.findUser(body.username);
+            if (!matchingUser) {
+                throw new BadRequestError('No user with this username exists.');
+            }
+
+            // check if secret question matches
+            if (matchingUser.secretQuestion != body.secretQuestion) {
+                throw new BadRequestError('Secret question does not match.');
+            }
+
+            const newHashedPassword = encryption.encrypt(body.newPassword);
+
+            await userService.update(body.username, {
+                password: newHashedPassword
+            });
+
+            // all successful
+            logger.info('Successfully reset user password.');
+            res.status(HttpStatus.OK).json({
+                message:
+                    'Successfully reset password, log in using the new one.',
+                success: true,
+                code: HttpStatus.OK
+            });
+        } catch (err) {
+            logger.error(err);
             next(err);
         }
     }

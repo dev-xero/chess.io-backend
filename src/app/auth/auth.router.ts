@@ -17,6 +17,13 @@ authRouter.post(
     }
 );
 
+authRouter.post(
+    '/reset-password',
+    async (req: Request, res: Response, next: NextFunction) => {
+        await authService.resetPassword(req, res, next)
+    }
+)
+
 authRouter.get(
     '/logout',
     async (req: Request, res: Response, next: NextFunction) => {

@@ -14,6 +14,7 @@ All endpoints aside from the base must be prefixed with `/v1` before requests ar
 | **GET** | `/v1/health` | False | Health checks, returns a 200 if the server is up. |
 | **POST** | `/v1/auth/register` | False | Registers a new user and generates an authentication token if successful. |
 | **POST** | `/v1/auth/login` | False | Logs in a user after validating credentials, returns an authentication token. |
+| **POST** | `/v1/auth/reset-password` | False | Resets user password after verifying username and secret question. |
 | **POST** | `/v1/auth/logout` | True | Attempts to log a user out after verifying their authorization token. Denies the request if the token is invalid / blacklisted. |
 | **POST** | `/v1/challenge/create` | True | Creates a pending chess challenge, expires in 30 mins if unused. |
 | **POST** | `/v1/challenge/accept/:id` | True | Accepts and assigns the opponent to the challenge specified by the id. |
