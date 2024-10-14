@@ -39,3 +39,6 @@ docker-compose.override.yml
 
 # terraform
 .terraform/
+.terraform.tfstate.lock.info
+terraform.tfstate
+terraform.tfbackup
