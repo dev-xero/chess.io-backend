@@ -24,7 +24,7 @@ ARG PG_DATABASE_URL
 ARG JWT_SECRET
 
 RUN touch .env
-RUN echo "PORT=${PORT:-8080}" >> .env
+RUN echo "PORT=${PORT:-8000}" >> .env
 RUN echo "NODE_ENV=${NODE_ENV:-production}" >> .env
 RUN echo "PG_DATABASE_URL=${PG_DATABASE_URL}" >> .env
 RUN echo "JWT_SECRET=${JWT_SECRET}" >> .env
@@ -34,5 +34,5 @@ RUN echo "JWT_SECRET=${JWT_SECRET}" >> .env
 RUN yarn install --production --frozen-lockfile
 RUN yarn prisma migrate deploy
 
-EXPOSE 8080
+EXPOSE 8000
 CMD ["node", "--experimental-specifier-resolution=node", "build/server.js"]
