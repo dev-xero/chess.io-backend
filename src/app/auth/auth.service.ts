@@ -43,7 +43,7 @@ class AuthService {
                 authToken
             });
 
-            dispatch('auth:registered');
+            dispatch('auth:registered', [newUser.username]);
 
             res.status(HttpStatus.CREATED).json({
                 message: 'Player registered successfully.',
@@ -92,7 +92,9 @@ class AuthService {
                 authToken
             });
 
-            console.log('Updated auth token, user logged in.');
+            logger.info(
+                `Updated auth token, user: ${thisUser.username} logged in.`
+            );
 
             res.status(HttpStatus.OK).json({
                 message: 'Log in successful.',
@@ -148,7 +150,9 @@ class AuthService {
 
             // is it same as old password
             if (encryption.matches(body.newPassword, matchingUser.password)) {
-                throw new BadRequestError("New password is same as the old one, log in instead.")
+                throw new BadRequestError(
+                    'New password is same as the old one, log in instead.'
+                );
             }
 
             const newHashedPassword = encryption.encrypt(body.newPassword);
@@ -158,7 +162,9 @@ class AuthService {
             });
 
             // all successful
-            logger.info('Successfully reset user password.');
+            logger.info(
+                `Successfully reset user: ${matchingUser.username} password.`
+            );
             res.status(HttpStatus.OK).json({
                 message:
                     'Successfully reset password, log in using the new one.',
@@ -209,7 +215,7 @@ class AuthService {
                 authToken: ''
             });
 
-            dispatch('auth:logged_out', username);
+            dispatch('auth:logged_out', [username]);
 
             res.status(HttpStatus.OK).json({
                 message: 'Logged out successfully',
