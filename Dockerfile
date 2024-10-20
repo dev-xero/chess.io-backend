@@ -29,7 +29,7 @@ RUN echo "NODE_ENV=${NODE_ENV:-production}" >> .env
 RUN echo "PG_DATABASE_URL=${PG_DATABASE_URL}" >> .env
 RUN echo "JWT_SECRET=${JWT_SECRET}" >> .env
 
-RUN cat .env
+# RUN cat .env
 
 RUN yarn install --production --frozen-lockfile
 RUN yarn prisma migrate deploy
