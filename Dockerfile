@@ -18,6 +18,11 @@ COPY package.json yarn.lock ./
 COPY --from=build /app/prisma ./prisma
 # COPY .env.production .env
 
+ARG PORT
+ARG NODE_ENV
+ARG PG_DATABASE_URL
+ARG JWT_SECRET
+
 RUN touch .env
 RUN echo "PORT=${PORT:-8080}" >> .env
 RUN echo "NODE_ENV=${NODE_ENV:-production}" >> .env
