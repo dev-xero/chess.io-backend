@@ -18,11 +18,11 @@ COPY package.json yarn.lock ./
 COPY --from=build /app/prisma ./prisma
 # COPY .env.production .env
 
-RUN echo "PORT={{ PORT }}" >> .env
-RUN echo "NODE_ENV={{ NODE_ENV }}" >> .env
-RUN echo "PG_DATABASE_URL={{ PG_DATABASE_URL }}" >> .env
-RUN echo "JWT_SECRET={{ JWT_SECRET }}" >> .env
-RUN echo "REDIS_URI={{ REDIS_URI }}" >> .env
+RUN echo "PORT=$PORT" >> .env && \
+    echo "NODE_ENV=$NODE_ENV" >> .env && \
+    echo "PG_DATABASE_URL=$PG_DATABASE_URL" >> .env && \
+    echo "JWT_SECRET=$JWT_SECRET" >> .env && \
+    echo "REDIS_URI=$REDIS_URI" >> .env
 
 RUN cat .env
 
