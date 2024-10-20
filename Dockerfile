@@ -18,6 +18,14 @@ COPY package.json yarn.lock ./
 COPY --from=build /app/prisma ./prisma
 # COPY .env.production .env
 
+RUN touch .env
+RUN echo "PORT=${PORT:-8080}" >> .env
+RUN echo "NODE_ENV=${NODE_ENV:-production}" >> .env
+RUN echo "PG_DATABASE_URL=${PG_DATABASE_URL}" >> .env
+RUN echo "JWT_SECRET=${JWT_SECRET}" >> .env
+
+RUN cat .env
+
 RUN yarn install --production --frozen-lockfile
 RUN yarn prisma migrate deploy
 
