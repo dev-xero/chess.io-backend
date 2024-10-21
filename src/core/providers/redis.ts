@@ -5,7 +5,9 @@ import { logger } from '@core/logging';
 export class RedisClient {
     private client: Redis;
 
-    constructor() {
+    constructor() {}
+
+    async connect() {
         this.client = new Redis(config.redis.uri);
 
         this.client.on('connect', () => {

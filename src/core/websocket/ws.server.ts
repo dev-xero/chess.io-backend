@@ -1,10 +1,10 @@
-import { Server as HTTPServer } from 'http';
+import { IncomingMessage } from 'http';
 import { WebSocket, Server as WebSocketServer } from 'ws';
 import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
 import { dispatch } from '..';
 
-interface ExtendedWebSocket extends WebSocket {
+export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
 }
 
@@ -13,39 +13,47 @@ export class WebSocketManager {
     private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
     private userConnections: Map<string, ExtendedWebSocket[]> = new Map();
 
-    constructor(
-        server: HTTPServer,
-        private redisClient: RedisClient
-    ) {
-        this.wss = new WebSocketServer({ server });
+    constructor(private redisClient: RedisClient) {
+        this.wss = new WebSocketServer({ noServer: true });
         this.init();
     }
 
-    private init() {
-        this.wss.on('connection', (ws: WebSocket) => {
-            logger.info('Websocket connection initialized.');
+    public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
+        this.wss.emit('connection', ws, req);
+        logger.info('WebSocket connection established.');
 
-            ws.on('message', (message: string) => {
+        ws.on('message', (message: string) => {
+            try {
                 const data = JSON.parse(message);
                 if (data.type === 'auth') {
                     this.authenticateUser(ws, data.userId);
+                    console.log(
+                        `User with id: ${data.userId} has been authenticated.`
+                    );
                 } else if (data.type === 'join_game') {
                     this.addToGame(data.gameId, ws);
+                    console.log(`Game with id: ${data.gameId} has been added.`);
                 }
-            });
+            } catch (error) {
+                logger.error('Failed to read message data.');
+                logger.error(error);
+            }
+        });
 
-            ws.on('close', () => {
-                logger.info('Websocket connection closed.');
-                this.removeFromGames(ws);
-                this.removeFromUsers(ws);
-            });
+        ws.on('close', () => {
+            logger.info('WebSocket connection closed.');
+            this.removeFromGames(ws);
+            this.removeFromUsers(ws);
+        });
+    }
 
-            // subscribe to games with redis
-            this.redisClient.subscribe('game_updates', (message) => {
-                const update = JSON.parse(message);
-                dispatch('game:update');
-                this.broadcastToGame(update.gameId, JSON.stringify(update));
-            });
+    private async init() {
+        // Connect and subscribe to games with redis
+        await this.redisClient.connect();
+        await this.redisClient.subscribe('game_updates', (message) => {
+            const update = JSON.parse(message);
+            dispatch('game:update');
+            this.broadcastToGame(update.gameId, JSON.stringify(update));
         });
     }
 

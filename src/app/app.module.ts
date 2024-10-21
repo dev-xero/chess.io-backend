@@ -1,5 +1,6 @@
 import { config, corsOptions } from '@core/config';
 import express, { Request, Response } from 'express';
+import expressWs from 'express-ws';
 import { dispatch } from '../core/events/app.events';
 import { appRouter } from './app.router';
 import helmet from 'helmet';
@@ -10,23 +11,48 @@ import { NotFoundErrorHandler } from '@core/handlers';
 import { HttpStatus } from '@constants/index';
 import { authRouter } from './auth/auth.module';
 import { ErrorHandler } from '@core/middlewares';
-import { createServer } from 'http';
-import { WebSocketManager } from '@core/websocket';
+import { IncomingMessage, createServer } from 'http';
+import { ExtendedWebSocket, WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
 import { createChallengeRouter } from './challenge/challenge.module';
 import { GameService, createGameRouter } from './game';
 import { ChallengeService } from './challenge';
 
 export async function startApplication() {
-    const application = express();
+    const expressServer = express();
+    const wsServer = expressWs(expressServer);
+    const application = wsServer.app;
     const port = config.app.port;
     const notFoundHandler = new NotFoundErrorHandler();
     const errorHandler = new ErrorHandler();
 
-    const httpServer = createServer(application);
+    // Websocket and Game Manager
     const redisClient = new RedisClient();
-    const webSocketManager = new WebSocketManager(httpServer, redisClient);
+    const webSocketManager = new WebSocketManager(redisClient);
     const gameService = new GameService(redisClient, webSocketManager);
+
+    application.ws('/v1/ws', (ws: ExtendedWebSocket, req: IncomingMessage) => {
+        webSocketManager.handleUpgrade(req, ws);
+    });
+
+    // Middleware
+    application.use(express.json());
+    application.use(parser.urlencoded({ extended: false }));
+    application.use(helmet());
+    application.disable('x-powered-by');
+    application.use(compression());
+    application.use(cors(corsOptions));
+
+    // Routers
+    const challengeService = new ChallengeService(gameService);
+    const challengeRouter = createChallengeRouter(challengeService);
+    const gameRouter = createGameRouter(gameService);
+
+    // Routes
+    application.use('/v1', appRouter);
+    application.use('/v1/auth', authRouter);
+    application.use('/v1/challenge', challengeRouter);
+    application.use('/v1/game', gameRouter);
 
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
@@ -37,20 +63,7 @@ export async function startApplication() {
         });
     });
 
-    const challengeService = new ChallengeService(gameService);
-    const challengeRouter = createChallengeRouter(challengeService);
-    const gameRouter = createGameRouter(gameService);
-
-    application.use(express.json());
-    application.use(parser.urlencoded({ extended: false }));
-    application.use(helmet());
-    application.disable('x-powered-by');
-    application.use(compression());
-    application.use(cors(corsOptions));
-    application.use('/v1', appRouter);
-    application.use('/v1/auth', authRouter);
-    application.use('/v1/challenge', challengeRouter);
-    application.use('/v1/game', gameRouter);
+    // Error handling middleware
     application.use(errorHandler.handle);
     application.use(notFoundHandler.handle);
 

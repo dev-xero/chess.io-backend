@@ -14,6 +14,7 @@ export function productionLogger() {
     return createLogger({
         format: combine(colorize(), timestamp(), logFormat()),
         transports: [
+            new transports.Console(),
             new transports.File({
                 filename: join(root.toString(), 'logs/prod.log')
             })
