@@ -10,6 +10,11 @@ interface AcceptedGame {
     duration: number;
 }
 
+interface IGamePlayer {
+    id: string;
+    username: string;
+}
+
 interface GameState {
     fen: string;
     pgn: string;
@@ -64,8 +69,8 @@ export class GameService {
     }
 
     public async createGame(
-        whiteID: string,
-        blackID: string,
+        whitePlayer: IGamePlayer,
+        blackPlayer: IGamePlayer,
         duration: number
     ) {
         const gameID = `game:${Date.now()}`;
@@ -83,19 +88,19 @@ export class GameService {
         };
 
         await this.redisClient.hmset(gameID, {
-            whitePlayer: whiteID,
-            blackPlayer: blackID,
+            whitePlayer: JSON.stringify(whitePlayer),
+            blackPlayer: JSON.stringify(blackPlayer),
             state: JSON.stringify(initialState)
         });
     }
 
     public async createPendingGame(
-        challengerUsername: string,
+        challenger: IGamePlayer,
         challengeID: string,
         duration: number
     ) {
         await this.redisClient.hmset(`pending:${challengeID}`, {
-            challenger: challengerUsername,
+            challenger: JSON.stringify(challenger),
             duration: duration,
             status: 'pending'
         });
@@ -120,7 +125,7 @@ export class GameService {
      */
     public async acceptPendingGame(
         challengeID: string,
-        acceptingUsername: string
+        opponent: IGamePlayer
     ): Promise<AcceptedGame | null> {
         const pendingGame = await this.redisClient.hgetall(
             `pending:${challengeID}`
@@ -130,7 +135,9 @@ export class GameService {
             return null;
         }
 
-        if (pendingGame.challenger == acceptingUsername) {
+        const challenger: IGamePlayer = JSON.parse(pendingGame.challenger);
+
+        if (challenger.username == opponent.username) {
             return null;
         }
 
@@ -138,8 +145,8 @@ export class GameService {
         const duration = parseInt(pendingGame.duration, 10);
 
         await this.createGame(
-            pendingGame.challenger,
-            acceptingUsername,
+            challenger,
+            opponent,
             duration
         );
         await this.redisClient.expire(gameID, 3600 * 24); // Expire in 24 hours if abandoned
@@ -148,11 +155,11 @@ export class GameService {
 
         // Broadcast game started event to target clients
         this.wsManager.broadcastToUser(
-            pendingGame.challenger,
+            challenger.id,
             JSON.stringify({ type: 'game_started', gameID })
         );
         this.wsManager.broadcastToUser(
-            acceptingUsername,
+            opponent.id,
             JSON.stringify({ type: 'game_started', gameID })
         );
 

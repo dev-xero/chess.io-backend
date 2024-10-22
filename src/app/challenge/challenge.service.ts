@@ -1,10 +1,12 @@
 import { GameService } from '@app/game';
+import { userService } from '@app/user';
 import { HttpStatus } from '@constants/status.codes';
+import { BadRequestError } from '@core/errors';
 import { logger } from '@core/logging';
 import { NextFunction, Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 
-interface UserReq {
+interface ChallengeRequest {
     username: string;
 }
 
@@ -13,14 +15,26 @@ export class ChallengeService {
 
     public async create(req: Request, res: Response, next: NextFunction) {
         try {
-            const user: UserReq = req.user;
+            const gameReq: ChallengeRequest = req.user;
             const challengeID = uuidv4();
             const duration = req.query['duration']
                 ? parseInt(req.query['duration'] as string, 10)
                 : 600; // 5 mins default
 
+            const userInfo = await userService.findUser(gameReq.username);
+            if (!userInfo) {
+                throw new BadRequestError(
+                    'Invalid username provided, cannot create this challenge.'
+                );
+            }
+
+            const challenger = {
+                id: userInfo.id,
+                username: userInfo.username
+            };
+
             await this.gameModule.createPendingGame(
-                user.username,
+                challenger,
                 challengeID,
                 duration
             );
@@ -48,12 +62,23 @@ export class ChallengeService {
     ) {
         try {
             const { challengeID } = req.params;
-            console.log('challengeID:', challengeID);
-            const acceptingUser: UserReq = req.user;
+            const gameReq: ChallengeRequest = req.user;
+
+            const userInfo = await userService.findUser(gameReq.username);
+            if (!userInfo) {
+                throw new BadRequestError(
+                    'Invalid username provided, cannot accept this challenge.'
+                );
+            }
+
+            const opponent = {
+                id: userInfo.id,
+                username: userInfo.username
+            }
 
             const acceptedGame = await this.gameModule.acceptPendingGame(
                 challengeID,
-                acceptingUser.username
+                opponent
             );
 
             console.log(acceptedGame);
