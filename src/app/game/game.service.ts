@@ -170,7 +170,11 @@ export class GameService {
 
             // validate turn and move
             if (chess.turn() != playerColor) throw new BadRequestError('Not your turn');
-            if (!chess.move(move)) throw new BadRequestError('Invalid move');
+        
+            const moveResult = chess.move(move);
+            if (!moveResult) {
+                throw new BadRequestError('Invalid move');
+            }
 
             const newState: GameState = {
                 ...gameData.state,
