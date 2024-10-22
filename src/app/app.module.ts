@@ -4,7 +4,7 @@ import expressWs from 'express-ws';
 import { dispatch } from '../core/events/app.events';
 import { appRouter } from './app.router';
 import helmet from 'helmet';
-import * as parser from 'body-parser';
+// import * as parser from 'body-parser';
 import compression from 'compression';
 import cors from 'cors';
 import { NotFoundErrorHandler } from '@core/handlers';
@@ -37,7 +37,7 @@ export async function startApplication() {
 
     // Middleware
     application.use(express.json());
-    application.use(parser.urlencoded({ extended: false }));
+    application.use(express.urlencoded({ extended: false }));
     application.use(helmet());
     application.disable('x-powered-by');
     application.use(compression());
@@ -64,8 +64,8 @@ export async function startApplication() {
     });
 
     // Error handling middleware
-    application.use(errorHandler.handle);
     application.use(notFoundHandler.handle);
+    application.use(errorHandler.handle);
 
     application.listen(port, () => dispatch('app:up'));
 }
