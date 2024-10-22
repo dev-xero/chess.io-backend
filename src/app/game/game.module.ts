@@ -19,10 +19,16 @@ export function createGameRouter(gameService: GameService) {
             }
 
             try {
-                const { move, playerID } = req.body;
+                const { move, username } = req.body;
+                if (!move || !username) {
+                    throw new BadRequestError(
+                        'Provide move the move and username'
+                    );
+                }
+                
                 const gameData = await gameService.makeMove(
                     gameID,
-                    playerID,
+                    username,
                     move
                 );
                 res.status(HttpStatus.OK).json({

@@ -22,7 +22,7 @@ class AuthHandler {
             decodedToken = jwt.verifyToken(token);
             if (!decodedToken) {
                 return next(
-                    new UnauthorizedError('This token is blacklisted.')
+                    new UnauthorizedError('This token is expired or blacklisted.')
                 );
             }
 

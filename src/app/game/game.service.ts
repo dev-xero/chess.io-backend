@@ -58,7 +58,7 @@ export class GameService {
                 state: JSON.parse(gameData.state)
             };
         } catch (err) {
-            logger.error(`Error making move: ${err}`);
+            logger.error(`Error getting game data: ${err}`);
             throw err;
         }
     }
@@ -160,19 +160,25 @@ export class GameService {
         return { gameID, duration };
     }
 
-    public async makeMove(gameID: string, playerID: string, move: string) {
+    public async makeMove(gameID: string, username: string, move: string) {
         try {
             const gameData = await this.getFullGameData(gameID);
             if (!gameData) return null;
 
             const chess = new Chess(gameData.state.fen);
-            const playerColor = gameData.whitePlayer == playerID ? 'w' : 'b';
+            const playerColor = gameData.whitePlayer == username ? 'w' : 'b';
+
+            logger.info(
+                `player color: ${playerColor}, pending player color: ${gameData.state.turn}, chess js pending color: ${chess.turn()}`
+            );
 
             // validate turn and move
-            if (chess.turn() != playerColor) throw new BadRequestError('Not your turn');
-        
-            const moveResult = chess.move(move);
-            if (!moveResult) {
+            if (gameData.state.turn != playerColor)
+                throw new BadRequestError('Not your turn');
+
+            try {
+                chess.move(move);
+            } catch (_) {
                 throw new BadRequestError('Invalid move');
             }
 
@@ -187,7 +193,8 @@ export class GameService {
                 isGameOver: chess.isGameOver()
             };
 
-            await this.setGameState(gameID, newState);
+            await this.setGameState(`game:${gameID}`, newState);
+            logger.info(`Game ${gameID} updated.`);
 
             this.wsManager.broadcastToGame(
                 gameID,
@@ -197,8 +204,6 @@ export class GameService {
                     state: newState
                 })
             );
-
-            console.log("current board:", chess.board())
 
             return newState;
         } catch (err) {
