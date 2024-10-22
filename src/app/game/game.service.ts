@@ -193,6 +193,8 @@ export class GameService {
                 })
             );
 
+            console.log("current board:", chess.board())
+
             return newState;
         } catch (err) {
             logger.error(`Error making move: ${err}`);
