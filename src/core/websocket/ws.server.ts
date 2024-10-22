@@ -69,7 +69,16 @@ export class WebSocketManager {
         if (!this.gameConnections.has(gameId)) {
             this.gameConnections.set(gameId, []);
         }
-        this.gameConnections.get(gameId)!.push(ws);
+        if (!this.gameConnections.get(gameId)!.includes(ws)) {
+            // they can't be added more than twice
+            this.gameConnections.get(gameId)!.push(ws);
+        } else {
+            logger.info("This user is already present, skipping.");
+        }
+        // debugging
+        // for (const conn of this.gameConnections.get(gameId)!) {
+        //     console.log("user Id present:", conn.userId)
+        // }
     }
 
     // remove ws connections from games
