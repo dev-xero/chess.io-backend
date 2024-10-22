@@ -32,16 +32,7 @@ export function createGameRouter(gameService: GameService) {
                     game: gameData
                 });
             } catch (err) {
-                if (err instanceof ApplicationError) {
-                    next(err);
-                } else {
-                    res.status(HttpStatus.UNPROCESSABLE).json({
-                        message:
-                            'This request could not be completed, invalid game state.',
-                        success: false,
-                        code: HttpStatus.UNPROCESSABLE
-                    });
-                }
+                next(err);
             }
         }
     );

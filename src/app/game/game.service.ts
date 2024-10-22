@@ -1,3 +1,4 @@
+import { BadRequestError } from '@core/errors';
 import { dispatch } from '@core/events';
 import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
@@ -168,8 +169,8 @@ export class GameService {
             const playerColor = gameData.whitePlayer == playerID ? 'w' : 'b';
 
             // validate turn and move
-            if (chess.turn() != playerColor) throw new Error('Not your turn');
-            if (!chess.move(move)) throw new Error('Invalid move');
+            if (chess.turn() != playerColor) throw new BadRequestError('Not your turn');
+            if (!chess.move(move)) throw new BadRequestError('Invalid move');
 
             const newState: GameState = {
                 ...gameData.state,
