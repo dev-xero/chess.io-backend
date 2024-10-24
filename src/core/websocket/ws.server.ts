@@ -59,11 +59,13 @@ export class WebSocketManager {
 
     private authenticateUser(ws: ExtendedWebSocket, userId: string) {
         ws.userId = userId;
-        if (!this.userConnections.has(userId)) {
-            this.userConnections.set(userId, []);
+        if (userId) {
+            if (!this.userConnections.has(userId)) {
+                this.userConnections.set(userId, []);
+            }
+            this.userConnections.get(userId)!.push(ws);
+            this.broadcastToUser(userId, 'successfully authenticated.');
         }
-        this.userConnections.get(userId)!.push(ws);
-        this.broadcastToUser(userId, 'successfully authenticated.');
     }
 
     private addToGame(gameId: string, ws: ExtendedWebSocket) {
