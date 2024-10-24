@@ -64,4 +64,13 @@ export class RedisClient {
     async del(key: string) {
         await this.client.del([key]);
     }
+
+    async keys(pattern: string): Promise<string[]> {
+        return this.client.keys(pattern);
+    }
+
+    // Get the value of a specific key
+    async get(key: string): Promise<string | null> {
+        return this.client.get(key);
+    }
 }

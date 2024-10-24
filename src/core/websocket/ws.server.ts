@@ -63,6 +63,7 @@ export class WebSocketManager {
             this.userConnections.set(userId, []);
         }
         this.userConnections.get(userId)!.push(ws);
+        this.broadcastToUser(userId, 'successfully authenticated.');
     }
 
     private addToGame(gameId: string, ws: ExtendedWebSocket) {
@@ -73,7 +74,7 @@ export class WebSocketManager {
             // they can't be added more than twice
             this.gameConnections.get(gameId)!.push(ws);
         } else {
-            logger.info("This user is already present, skipping.");
+            logger.info('This user is already present, skipping.');
         }
         // debugging
         // for (const conn of this.gameConnections.get(gameId)!) {
