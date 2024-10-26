@@ -17,45 +17,8 @@ import {
 export class GameService {
     constructor(
         private redisClient: RedisClient,
-        private eventHandler: GameEvents
+        private wsManager: WebSocketManager
     ) {}
-
-    public async createChessGame(
-        whitePlayer: GamePlayer,
-        blackPlayer: GamePlayer,
-        duration: number
-    ) {
-        const gameID = `game:${Date.now()}`;
-        const chess = new Chess();
-        const initialState: GameState = {
-            fen: chess.fen(),
-            pgn: chess.pgn(),
-            gameType:
-                duration == 600
-                    ? 'Rapid'
-                    : duration == 300
-                      ? 'Bullet'
-                      : 'Blitz',
-            whiteTTP: duration,
-            blackTTP: duration,
-            turn: 'w',
-            isCheckmate: chess.isCheckmate(),
-            inCheck: chess.inCheck(),
-            isDraw: chess.isDraw(),
-            isGameOver: chess.isGameOver()
-        };
-
-        const gameData = {
-            gameID,
-            whitePlayer: JSON.stringify(whitePlayer),
-            blackPlayer: JSON.stringify(blackPlayer),
-            state: JSON.stringify(initialState)
-        };
-
-        await this.redisClient.hmset(gameID, gameData);
-
-        return gameData;
-    }
 
     public async createPendingChallenge(
         challenger: GamePlayer,
@@ -123,17 +86,54 @@ export class GameService {
         await this.redisClient.del(`pending:${challengeID}`);
 
         // Broadcast game started event to target clients
-        // this.wsManager.broadcastToUser(
-        //     challenger.id,
-        //     JSON.stringify({ type: 'game_started', gameID, gameState })
-        // );
-        // this.wsManager.broadcastToUser(
-        //     opponent.id,
-        //     JSON.stringify({ type: 'game_started', gameID, gameState })
-        // );
+        this.wsManager.broadcastToUser(
+            challenger.id,
+            JSON.stringify({ type: 'game_started', gameID, gameState })
+        );
+        this.wsManager.broadcastToUser(
+            opponent.id,
+            JSON.stringify({ type: 'game_started', gameID, gameState })
+        );
 
         dispatch('game:started', [gameID]);
         return { gameID, duration, gameState };
+    }
+
+    public async createChessGame(
+        whitePlayer: GamePlayer,
+        blackPlayer: GamePlayer,
+        duration: number
+    ) {
+        const gameID = `game:${Date.now()}`;
+        const chess = new Chess();
+        const initialState: GameState = {
+            fen: chess.fen(),
+            pgn: chess.pgn(),
+            gameType:
+                duration == 600
+                    ? 'Rapid'
+                    : duration == 300
+                      ? 'Bullet'
+                      : 'Blitz',
+            whiteTTP: duration,
+            blackTTP: duration,
+            turn: 'w',
+            isCheckmate: chess.isCheckmate(),
+            inCheck: chess.inCheck(),
+            isDraw: chess.isDraw(),
+            isGameOver: chess.isGameOver()
+        };
+
+        const gameData = {
+            gameID,
+            whitePlayer: JSON.stringify(whitePlayer),
+            blackPlayer: JSON.stringify(blackPlayer),
+            state: JSON.stringify(initialState)
+        };
+
+        await this.redisClient.hmset(gameID, gameData);
+
+        return gameData;
     }
 
     public async getFullGameData(gameID: string): Promise<FullGameData | null> {
