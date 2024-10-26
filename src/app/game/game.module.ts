@@ -8,41 +8,6 @@ import { ApplicationError, BadRequestError } from '@core/errors';
 export function createGameRouter(gameService: GameService) {
     const gameRouter = Router();
 
-    gameRouter.post(
-        '/move/:gameID',
-        isAuthorized,
-        async (req: Request, res: Response, next: NextFunction) => {
-            const { gameID } = req.params;
-
-            if (!gameID) {
-                throw new BadRequestError('Game ID must be attached.');
-            }
-
-            try {
-                const { move, username } = req.body;
-                if (!move || !username) {
-                    throw new BadRequestError(
-                        'Provide move the move and username'
-                    );
-                }
-                
-                const gameData = await gameService.makeMove(
-                    gameID,
-                    username,
-                    move
-                );
-                res.status(HttpStatus.OK).json({
-                    message: 'Completed game move.',
-                    success: true,
-                    code: HttpStatus.OK,
-                    game: gameData
-                });
-            } catch (err) {
-                next(err);
-            }
-        }
-    );
-
     gameRouter.get(
         '/state/:gameID',
         isAuthorized,

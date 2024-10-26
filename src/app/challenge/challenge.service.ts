@@ -33,7 +33,7 @@ export class ChallengeService {
                 username: userInfo.username
             };
 
-            await this.gameModule.createPendingGame(
+            await this.gameModule.createPendingChallenge(
                 challenger,
                 challengeID,
                 duration
@@ -77,10 +77,11 @@ export class ChallengeService {
             };
 
             try {
-                const acceptedGame = await this.gameModule.acceptPendingGame(
-                    challengeID,
-                    opponent,
-                );
+                const acceptedGame =
+                    await this.gameModule.acceptPendingChallenge(
+                        challengeID,
+                        opponent
+                    );
 
                 console.log(acceptedGame);
 

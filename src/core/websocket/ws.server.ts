@@ -3,6 +3,12 @@ import { WebSocket, Server as WebSocketServer } from 'ws';
 import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
 import { dispatch } from '..';
+import {
+    FullGameData,
+    GameMove,
+    GameState
+} from '@app/game/interfaces/game.interfaces';
+import { Chess } from 'chess.js';
 
 export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
@@ -33,6 +39,7 @@ export class WebSocketManager {
                 } else if (data.type === 'join_game') {
                     this.addToGame(data.gameId, ws);
                     console.log(`Game with id: ${data.gameId} has been added.`);
+                } else if (data.type === 'move') {
                 }
             } catch (error) {
                 logger.error('Failed to read message data.');
@@ -141,6 +148,110 @@ export class WebSocketManager {
                     client.send(message);
                 }
             });
+        }
+    }
+
+    private async handleMove(ws: ExtendedWebSocket, data: GameMove) {
+        if (!ws.userId) {
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: 'Unauthenticated.'
+                })
+            );
+            return;
+        }
+
+        try {
+            const gameData: string | null = await this.redisClient.get(
+                `game:${data.gameID}`
+            );
+            if (!gameData) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'error',
+                        message: 'Game not found'
+                    })
+                );
+                return;
+            }
+
+            const parsedData: FullGameData = JSON.parse(gameData);
+            const chess = new Chess(parsedData.state.fen);
+            const playerColor =
+                parsedData.whitePlayer === data.username ? 'w' : 'b';
+
+            // validate turn
+            if (parsedData.state.turn != playerColor) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'error',
+                        message: 'Not your turn.'
+                    })
+                );
+                return;
+            }
+
+            // Attempt to make chess move
+            try {
+                const newMove = chess.move({
+                    from: data.from,
+                    to: data.to,
+                    promotion: data.promotion
+                });
+
+                const newState = {
+                    ...parsedData.state,
+                    fen: chess.fen(),
+                    pgn: chess.pgn(),
+                    turn: chess.turn(),
+                    inCheck: chess.inCheck(),
+                    isCheckmate: chess.isCheckmate(),
+                    isDraw: chess.isDraw(),
+                    isGameOver: chess.isGameOver()
+                };
+
+                await this.redisClient.hset(
+                    data.gameID,
+                    'state',
+                    JSON.stringify(newState)
+                );
+
+                // Notify players
+                this.broadcastToGame(
+                    data.gameID,
+                    JSON.stringify({
+                        type: 'move',
+                        move: newMove,
+                        state: newState
+                    })
+                );
+
+                // Acknowledge move to sender
+                ws.send(
+                    JSON.stringify({
+                        type: 'move_accepted',
+                        gameId: data.gameID,
+                        move: newMove
+                    })
+                );
+            } catch (error) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'error',
+                        message: 'Invalid move'
+                    })
+                );
+                return;
+            }
+        } catch (err) {
+            logger.error(err);
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: err.message ?? 'This move could not be made'
+                })
+            );
         }
     }
 }
