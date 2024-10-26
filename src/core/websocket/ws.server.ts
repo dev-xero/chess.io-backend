@@ -14,12 +14,6 @@ export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
 }
 
-interface WSMessage {
-    type: string;
-    payload: any;
-    error?: string;
-}
-
 export class WebSocketManager {
     private wss: WebSocketServer;
     private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
@@ -31,38 +25,34 @@ export class WebSocketManager {
         this.init();
     }
 
-    private sendMessage(ws: ExtendedWebSocket, message: WSMessage) {
-        ws.send(JSON.stringify(message));
-    }
-
     public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
         this.wss.emit('connection', ws, req);
         logger.info('WebSocket connection established.');
 
         ws.on('message', (message: string) => {
             try {
-                const data = JSON.parse(message);
-                switch (data.type) {
+                const msg = JSON.parse(message);
+                switch (msg.type) {
                     case 'auth':
-                        this.authenticateUser(ws, data.userId);
+                        this.authenticateUser(ws, msg.userId);
                         console.log(
-                            `User with id: ${data.userId} has been authenticated.`
+                            `User with id: ${msg.userId} has been authenticated.`
                         );
                         break;
 
                     case 'join_game':
-                        this.addToGame(data.gameID, ws);
+                        this.addToGame(msg.gameID, ws);
                         console.log(
-                            `Game with id: ${data.gameID} has been added.`
+                            `Game with id: ${msg.gameID} has been added.`
                         );
                         break;
 
                     case 'player_ready':
-                        this.handlePlayerReady(ws, data.gameID);
+                        this.handlePlayerReady(ws, msg.gameID);
                         break;
 
                     case 'move':
-                        this.handleMove(ws, data);
+                        this.handleMove(ws, msg.data);
                         break;
 
                     default:
@@ -189,7 +179,7 @@ export class WebSocketManager {
 
         try {
             // Get game data from Redis first
-            const cache = await this.redisClient.get(`game:${gameID}`);
+            const cache = await this.redisClient.hgetall(`game:${gameID}`);
             if (!cache) {
                 ws.send(
                     JSON.stringify({
@@ -200,7 +190,7 @@ export class WebSocketManager {
                 return;
             }
 
-            const gameData = JSON.parse(cache);
+            const gameData = cache;
 
             if (!this.playerReadyStates.has(gameID)) {
                 this.playerReadyStates.set(gameID, new Set());
@@ -209,19 +199,24 @@ export class WebSocketManager {
             const readyPlayers = this.playerReadyStates.get(gameID)!;
             readyPlayers.add(ws.userId);
 
+            const whitePlayer = JSON.parse(gameData.whitePlayer);
+            const blackPlayer = JSON.parse(gameData.blackPlayer);
+
             // Check if both correct players are ready
             if (
                 readyPlayers.size === 2 &&
-                readyPlayers.has(gameData.whitePlayer) &&
-                readyPlayers.has(gameData.blackPlayer)
+                readyPlayers.has(whitePlayer.id) &&
+                readyPlayers.has(blackPlayer.id)
             ) {
                 this.broadcastToGame(
                     gameID,
                     JSON.stringify({
                         type: 'game_start',
-                        state: gameData.state,
-                        whitePlayer: gameData.whitePlayer,
-                        blackPlayer: gameData.blackPlayer
+                        game: {
+                            state: gameData.state,
+                            whitePlayer: gameData.whitePlayer,
+                            blackPlayer: gameData.blackPlayer
+                        }
                     })
                 );
             } else {
@@ -256,96 +251,103 @@ export class WebSocketManager {
             return;
         }
 
-        try {
-            const gameData: string | null = await this.redisClient.get(
-                `game:${data.gameID}`
-            );
-            if (!gameData) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'error',
-                        message: 'Game not found'
-                    })
-                );
-                return;
-            }
-
-            const parsedData: FullGameData = JSON.parse(gameData);
-            const chess = new Chess(parsedData.state.fen);
-            const playerColor =
-                parsedData.whitePlayer === data.username ? 'w' : 'b';
-
-            // validate turn
-            if (parsedData.state.turn != playerColor) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'error',
-                        message: 'Not your turn.'
-                    })
-                );
-                return;
-            }
-
-            // Attempt to make chess move
+        if (data && data.gameID) {
             try {
-                const newMove = chess.move({
-                    from: data.from,
-                    to: data.to,
-                    promotion: data.promotion
-                });
-
-                const newState = {
-                    ...parsedData.state,
-                    fen: chess.fen(),
-                    pgn: chess.pgn(),
-                    turn: chess.turn(),
-                    inCheck: chess.inCheck(),
-                    isCheckmate: chess.isCheckmate(),
-                    isDraw: chess.isDraw(),
-                    isGameOver: chess.isGameOver()
-                };
-
-                await this.redisClient.hset(
-                    data.gameID,
-                    'state',
-                    JSON.stringify(newState)
+                console.log(data);
+                const gameData = await this.redisClient.hgetall(
+                    `game:${data.gameID}`
                 );
+                if (!gameData) {
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: 'Game not found'
+                        })
+                    );
+                    return;
+                }
 
-                // Notify players
-                this.broadcastToGame(
-                    data.gameID,
-                    JSON.stringify({
-                        type: 'move',
-                        move: newMove,
-                        state: newState
-                    })
-                );
+                console.log(gameData);
 
-                // Acknowledge move to sender
-                ws.send(
-                    JSON.stringify({
-                        type: 'move_accepted',
-                        gameId: data.gameID,
-                        move: newMove
-                    })
-                );
-            } catch (error) {
+                const parsedState: GameState = JSON.parse(gameData.state);
+                const whitePlayer = JSON.parse(gameData.whitePlayer);
+
+                const chess = new Chess(parsedState.fen);
+                const playerColor =
+                    whitePlayer.username === data.username ? 'w' : 'b';
+
+                // validate turn
+                if (parsedState.turn != playerColor) {
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: 'Not your turn.'
+                        })
+                    );
+                    return;
+                }
+
+                // Attempt to make chess move
+                try {
+                    const newMove = chess.move({
+                        from: data.from,
+                        to: data.to,
+                        promotion: data.promotion
+                    });
+
+                    const newState = {
+                        ...parsedState,
+                        fen: chess.fen(),
+                        pgn: chess.pgn(),
+                        turn: chess.turn(),
+                        inCheck: chess.inCheck(),
+                        isCheckmate: chess.isCheckmate(),
+                        isDraw: chess.isDraw(),
+                        isGameOver: chess.isGameOver()
+                    };
+
+                    await this.redisClient.hset(
+                        `game:${data.gameID}`,
+                        'state',
+                        JSON.stringify(newState)
+                    );
+
+                    // Notify players
+                    this.broadcastToGame(
+                        data.gameID,
+                        JSON.stringify({
+                            type: 'move',
+                            move: newMove,
+                            state: newState
+                        })
+                    );
+
+                    // Acknowledge move to sender
+                    ws.send(
+                        JSON.stringify({
+                            type: 'move_accepted',
+                            gameId: data.gameID,
+                            state: newState
+                        })
+                    );
+                } catch (error) {
+                    ws.send(
+                        JSON.stringify({
+                            type: 'error',
+                            message: 'Invalid move'
+                        })
+                    );
+                    return;
+                }
+            } catch (err) {
+                logger.error(err);
                 ws.send(
                     JSON.stringify({
                         type: 'error',
-                        message: 'Invalid move'
+                        message: err.message ?? 'This move could not be made'
                     })
                 );
-                return;
             }
-        } catch (err) {
-            logger.error(err);
-            ws.send(
-                JSON.stringify({
-                    type: 'error',
-                    message: err.message ?? 'This move could not be made'
-                })
-            );
         }
     }
 
