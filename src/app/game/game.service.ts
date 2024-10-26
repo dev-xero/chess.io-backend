@@ -88,14 +88,14 @@ export class GameService {
         // Broadcast game started event to target clients
         this.wsManager.broadcastToUser(
             challenger.id,
-            JSON.stringify({ type: 'game_started', gameID, gameState })
+            JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
         );
         this.wsManager.broadcastToUser(
             opponent.id,
-            JSON.stringify({ type: 'game_started', gameID, gameState })
+            JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
         );
 
-        dispatch('game:started', [gameID]);
+        dispatch('game:accepted', [gameID]);
         return { gameID, duration, gameState };
     }
 

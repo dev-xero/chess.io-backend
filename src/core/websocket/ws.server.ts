@@ -14,14 +14,25 @@ export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
 }
 
+interface WSMessage {
+    type: string;
+    payload: any;
+    error?: string;
+}
+
 export class WebSocketManager {
     private wss: WebSocketServer;
     private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
     private userConnections: Map<string, ExtendedWebSocket[]> = new Map();
+    private playerReadyStates: Map<string, Set<string>> = new Map();
 
     constructor(private redisClient: RedisClient) {
         this.wss = new WebSocketServer({ noServer: true });
         this.init();
+    }
+
+    private sendMessage(ws: ExtendedWebSocket, message: WSMessage) {
+        ws.send(JSON.stringify(message));
     }
 
     public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
@@ -31,15 +42,31 @@ export class WebSocketManager {
         ws.on('message', (message: string) => {
             try {
                 const data = JSON.parse(message);
-                if (data.type === 'auth') {
-                    this.authenticateUser(ws, data.userId);
-                    console.log(
-                        `User with id: ${data.userId} has been authenticated.`
-                    );
-                } else if (data.type === 'join_game') {
-                    this.addToGame(data.gameId, ws);
-                    console.log(`Game with id: ${data.gameId} has been added.`);
-                } else if (data.type === 'move') {
+                switch (data.type) {
+                    case 'auth':
+                        this.authenticateUser(ws, data.userId);
+                        console.log(
+                            `User with id: ${data.userId} has been authenticated.`
+                        );
+                        break;
+
+                    case 'join_game':
+                        this.addToGame(data.gameID, ws);
+                        console.log(
+                            `Game with id: ${data.gameID} has been added.`
+                        );
+                        break;
+
+                    case 'player_ready':
+                        this.handlePlayerReady(ws, data.gameID);
+                        break;
+
+                    case 'move':
+                        this.handleMove(ws, data);
+                        break;
+
+                    default:
+                        console.log('Invalid message.');
                 }
             } catch (error) {
                 logger.error('Failed to read message data.');
@@ -75,20 +102,16 @@ export class WebSocketManager {
         }
     }
 
-    private addToGame(gameId: string, ws: ExtendedWebSocket) {
-        if (!this.gameConnections.has(gameId)) {
-            this.gameConnections.set(gameId, []);
+    private addToGame(gameID: string, ws: ExtendedWebSocket) {
+        if (!this.gameConnections.has(gameID)) {
+            this.gameConnections.set(gameID, []);
         }
-        if (!this.gameConnections.get(gameId)!.includes(ws)) {
+        if (!this.gameConnections.get(gameID)!.includes(ws)) {
             // they can't be added more than twice
-            this.gameConnections.get(gameId)!.push(ws);
+            this.gameConnections.get(gameID)!.push(ws);
         } else {
             logger.info('This user is already present, skipping.');
         }
-        // debugging
-        // for (const conn of this.gameConnections.get(gameId)!) {
-        //     console.log("user Id present:", conn.userId)
-        // }
     }
 
     // remove ws connections from games
@@ -148,6 +171,77 @@ export class WebSocketManager {
                     client.send(message);
                 }
             });
+        }
+    }
+
+    private async handlePlayerReady(ws: ExtendedWebSocket, gameID: string) {
+        if (!ws.userId) return;
+
+        if (!gameID) {
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: 'Provide a valid game ID.'
+                })
+            );
+            return;
+        }
+
+        try {
+            // Get game data from Redis first
+            const cache = await this.redisClient.get(`game:${gameID}`);
+            if (!cache) {
+                ws.send(
+                    JSON.stringify({
+                        type: 'error',
+                        message: 'Game not found'
+                    })
+                );
+                return;
+            }
+
+            const gameData = JSON.parse(cache);
+
+            if (!this.playerReadyStates.has(gameID)) {
+                this.playerReadyStates.set(gameID, new Set());
+            }
+
+            const readyPlayers = this.playerReadyStates.get(gameID)!;
+            readyPlayers.add(ws.userId);
+
+            // Check if both correct players are ready
+            if (
+                readyPlayers.size === 2 &&
+                readyPlayers.has(gameData.whitePlayer) &&
+                readyPlayers.has(gameData.blackPlayer)
+            ) {
+                this.broadcastToGame(
+                    gameID,
+                    JSON.stringify({
+                        type: 'game_start',
+                        state: gameData.state,
+                        whitePlayer: gameData.whitePlayer,
+                        blackPlayer: gameData.blackPlayer
+                    })
+                );
+            } else {
+                this.broadcastToGame(
+                    gameID,
+                    JSON.stringify({
+                        type: 'waiting_for_opponent',
+                        readyPlayers: Array.from(readyPlayers)
+                    })
+                );
+            }
+            logger.info('Done with player ready message.');
+        } catch (err) {
+            logger.error(err);
+            ws.send(
+                JSON.stringify({
+                    type: 'error',
+                    message: 'Failed to handle ready state.'
+                })
+            );
         }
     }
 
@@ -253,5 +347,28 @@ export class WebSocketManager {
                 })
             );
         }
+    }
+
+    private handleDisconnect(ws: ExtendedWebSocket) {
+        if (!ws.userId) return;
+
+        // Remove from ready states for all games
+        this.gameConnections.forEach((connections, gameId) => {
+            const readyPlayers = this.playerReadyStates.get(gameId);
+            if (readyPlayers?.has(ws.userId!)) {
+                readyPlayers.delete(ws.userId!);
+                // Notify other players
+                this.broadcastToGame(
+                    gameId,
+                    JSON.stringify({
+                        type: 'player_disconnected',
+                        userId: ws.userId
+                    })
+                );
+            }
+        });
+
+        this.removeFromGames(ws);
+        this.removeFromUsers(ws);
     }
 }
