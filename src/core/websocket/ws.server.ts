@@ -9,6 +9,7 @@ import {
     GameState
 } from '@app/game/interfaces/game.interfaces';
 import { Chess } from 'chess.js';
+import { number } from 'joi';
 
 export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
@@ -213,6 +214,7 @@ export class WebSocketManager {
                     JSON.stringify({
                         type: 'game_start',
                         game: {
+                            duration: parseInt(gameData.duration),
                             state: gameData.state,
                             whitePlayer: gameData.whitePlayer,
                             blackPlayer: gameData.blackPlayer
@@ -303,7 +305,9 @@ export class WebSocketManager {
                         inCheck: chess.inCheck(),
                         isCheckmate: chess.isCheckmate(),
                         isDraw: chess.isDraw(),
-                        isGameOver: chess.isGameOver()
+                        isGameOver: chess.isGameOver(),
+                        whiteTTP: data.whiteTTP,
+                        blackTTP: data.blackTTP
                     };
 
                     await this.redisClient.hset(
@@ -318,7 +322,8 @@ export class WebSocketManager {
                         JSON.stringify({
                             type: 'move',
                             move: newMove,
-                            state: newState
+                            state: newState,
+                            duration: parseInt(gameData.duration)
                         })
                     );
 
@@ -327,7 +332,8 @@ export class WebSocketManager {
                         JSON.stringify({
                             type: 'move_accepted',
                             gameId: data.gameID,
-                            state: newState
+                            state: newState,
+                            duration: parseInt(gameData.duration)
                         })
                     );
                 } catch (error) {

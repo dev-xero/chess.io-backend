@@ -7,13 +7,12 @@ import { Chess } from 'chess.js';
 import {
     AcceptedGame,
     FullGameData,
-    GameEvents,
-    GameMove,
     GamePlayer,
     GameState
 } from './interfaces/game.interfaces';
 
-// THIS SHIT SHOULDN'T HAVE ANYTHING TO DO WITH EVENT HANDLER
+type ChessGameDuration = 600000 | 300000 | 180000;
+
 export class GameService {
     constructor(
         private redisClient: RedisClient,
@@ -74,7 +73,7 @@ export class GameService {
         const gameState = await this.createChessGame(
             challenger,
             opponent,
-            duration
+            (duration * 1000) as ChessGameDuration // to ms
         );
         if (!gameState) {
             throw new BadRequestError('Could not create this game.');
@@ -102,19 +101,28 @@ export class GameService {
     public async createChessGame(
         whitePlayer: GamePlayer,
         blackPlayer: GamePlayer,
-        duration: number
+        duration: ChessGameDuration
     ) {
+        const validDurations = [600000, 300000, 180000] as const;
+        if (
+            !validDurations.includes(
+                duration as (typeof validDurations)[number]
+            )
+        ) {
+            return null;
+        }
+
         const gameID = `game:${Date.now()}`;
         const chess = new Chess();
         const initialState: GameState = {
             fen: chess.fen(),
             pgn: chess.pgn(),
             gameType:
-                duration == 600
+                duration == 600000
                     ? 'Rapid'
-                    : duration == 300
-                      ? 'Bullet'
-                      : 'Blitz',
+                    : duration == 300000
+                      ? 'Blitz'
+                      : 'Bullet',
             whiteTTP: duration,
             blackTTP: duration,
             turn: 'w',
@@ -128,7 +136,8 @@ export class GameService {
             gameID,
             whitePlayer: JSON.stringify(whitePlayer),
             blackPlayer: JSON.stringify(blackPlayer),
-            state: JSON.stringify(initialState)
+            state: JSON.stringify(initialState),
+            duration
         };
 
         await this.redisClient.hmset(gameID, gameData);
@@ -143,7 +152,8 @@ export class GameService {
             return {
                 whitePlayer: gameData.whitePlayer,
                 blackPlayer: gameData.blackPlayer,
-                state: JSON.parse(gameData.state)
+                state: JSON.parse(gameData.state),
+                duration: parseInt(gameData.duration)
             };
         } catch (err) {
             logger.error(`Error getting game data: ${err}`);

@@ -32,6 +32,7 @@ export interface FullGameData {
     whitePlayer: string;
     blackPlayer: string;
     state: GameState;
+    duration: number;
 }
 
 export interface GameMove {
@@ -39,5 +40,7 @@ export interface GameMove {
     username: string;
     from: string;
     to: string;
+    whiteTTP: number,
+    blackTTP: number,
     promotion: string;
 }
