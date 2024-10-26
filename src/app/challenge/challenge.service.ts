@@ -44,7 +44,7 @@ export class ChallengeService {
                 success: true,
                 code: HttpStatus.CREATED,
                 payload: {
-                    link: `accept/${challengeID}`,
+                    link: `accept/${userInfo.username}/${challengeID}`,
                     duration: duration,
                     expiresIn: '30mins'
                 }
@@ -74,28 +74,38 @@ export class ChallengeService {
             const opponent = {
                 id: userInfo.id,
                 username: userInfo.username
-            }
+            };
 
-            const acceptedGame = await this.gameModule.acceptPendingGame(
-                challengeID,
-                opponent
-            );
+            try {
+                const acceptedGame = await this.gameModule.acceptPendingGame(
+                    challengeID,
+                    opponent,
+                );
 
-            console.log(acceptedGame);
+                console.log(acceptedGame);
 
-            if (acceptedGame) {
-                res.status(HttpStatus.OK).json({
-                    message: 'Challenge accepted, game created.',
-                    success: true,
-                    code: HttpStatus.OK,
-                    payload: acceptedGame
-                });
-            } else {
-                res.status(HttpStatus.NOT_FOUND).json({
-                    message: 'Challenge not found or already accepted.',
+                if (acceptedGame) {
+                    res.status(HttpStatus.OK).json({
+                        message: 'Challenge accepted, game created.',
+                        success: true,
+                        code: HttpStatus.OK,
+                        payload: acceptedGame
+                    });
+                } else {
+                    res.status(HttpStatus.NOT_FOUND).json({
+                        message: 'Challenge not found or already accepted.',
+                        success: false,
+                        code: HttpStatus.NOT_FOUND
+                    });
+                }
+            } catch (err) {
+                logger.error(err);
+                res.status(HttpStatus.BAD_REQUEST).json({
+                    message: 'Challengers cannot accept the game.',
                     success: false,
-                    code: HttpStatus.NOT_FOUND
+                    code: HttpStatus.BAD_REQUEST
                 });
+                return;
             }
         } catch (err) {
             logger.error('Failed to accept challenge.\nError:', err);

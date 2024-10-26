@@ -8,6 +8,7 @@ import { Chess } from 'chess.js';
 interface AcceptedGame {
     gameID: string;
     duration: number;
+    gameState: any;
 }
 
 interface IGamePlayer {
@@ -87,11 +88,16 @@ export class GameService {
             isGameOver: chess.isGameOver()
         };
 
-        await this.redisClient.hmset(gameID, {
+        const gameData = {
+            gameID,
             whitePlayer: JSON.stringify(whitePlayer),
             blackPlayer: JSON.stringify(blackPlayer),
             state: JSON.stringify(initialState)
-        });
+        }
+
+        await this.redisClient.hmset(gameID, gameData);
+
+        return gameData;
     }
 
     public async createPendingGame(
@@ -137,34 +143,36 @@ export class GameService {
 
         const challenger: IGamePlayer = JSON.parse(pendingGame.challenger);
 
+        // Challenger can't accept the game
         if (challenger.username == opponent.username) {
-            return null;
+            throw new BadRequestError("Challenger can't accept the game.");
         }
 
         const gameID = `game:${Date.now()}`;
         const duration = parseInt(pendingGame.duration, 10);
 
-        await this.createGame(
-            challenger,
-            opponent,
-            duration
-        );
-        await this.redisClient.expire(gameID, 3600 * 24); // Expire in 24 hours if abandoned
+        const gameState = await this.createGame(challenger, opponent, duration);
+        if (!gameState) {
+            throw new BadRequestError('Could not create this game.');
+        }
 
-        await this.redisClient.del(`pending:${challengeID}`); // Remove pending game
+        // Expire in 24 hours if abandoned
+        await this.redisClient.expire(gameID, 3600 * 24);
+        // Remove pending game
+        await this.redisClient.del(`pending:${challengeID}`);
 
         // Broadcast game started event to target clients
         this.wsManager.broadcastToUser(
             challenger.id,
-            JSON.stringify({ type: 'game_started', gameID })
+            JSON.stringify({ type: 'game_started', gameID, gameState })
         );
         this.wsManager.broadcastToUser(
             opponent.id,
-            JSON.stringify({ type: 'game_started', gameID })
+            JSON.stringify({ type: 'game_started', gameID, gameState })
         );
 
         dispatch('game:started', [gameID]);
-        return { gameID, duration };
+        return { gameID, duration, gameState };
     }
 
     public async makeMove(gameID: string, username: string, move: string) {

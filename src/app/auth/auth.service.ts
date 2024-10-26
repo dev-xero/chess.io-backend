@@ -62,7 +62,7 @@ class AuthService {
                 }
             });
         } catch (err) {
-            dispatch('app:internal:error', [err]);
+            logger.error(err)
             next(err);
         }
     }
@@ -113,7 +113,7 @@ class AuthService {
                 }
             });
         } catch (err) {
-            dispatch('app:internal:error', [err]);
+            logger.error(err);
             next(err);
         }
     }
