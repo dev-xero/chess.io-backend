@@ -28,11 +28,13 @@ export class WebSocketManager {
 
     public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
         this.wss.emit('connection', ws, req);
+
         logger.info('WebSocket connection established.');
 
         ws.on('message', (message: string) => {
             try {
                 const msg = JSON.parse(message);
+
                 switch (msg.type) {
                     case 'auth':
                         this.authenticateUser(ws, msg.userId);
@@ -85,24 +87,22 @@ export class WebSocketManager {
     private authenticateUser(ws: ExtendedWebSocket, userId: string) {
         ws.userId = userId;
         if (userId) {
-            if (!this.userConnections.has(userId)) {
+            if (!this.userConnections.has(userId))
                 this.userConnections.set(userId, []);
-            }
+
             this.userConnections.get(userId)!.push(ws);
             this.broadcastToUser(userId, 'successfully authenticated.');
         }
     }
 
     private addToGame(gameID: string, ws: ExtendedWebSocket) {
-        if (!this.gameConnections.has(gameID)) {
+        if (!this.gameConnections.has(gameID))
             this.gameConnections.set(gameID, []);
-        }
-        if (!this.gameConnections.get(gameID)!.includes(ws)) {
-            // they can't be added more than twice
+
+        // they can't be added more than twice
+        if (!this.gameConnections.get(gameID)!.includes(ws))
             this.gameConnections.get(gameID)!.push(ws);
-        } else {
-            logger.info('This user is already present, skipping.');
-        }
+        else logger.info('This user is already present, skipping.');
     }
 
     // remove ws connections from games
@@ -214,6 +214,7 @@ export class WebSocketManager {
                     JSON.stringify({
                         type: 'game_start',
                         game: {
+                            startTime: Date.now(),
                             duration: parseInt(gameData.duration),
                             state: gameData.state,
                             whitePlayer: gameData.whitePlayer,
@@ -230,9 +231,11 @@ export class WebSocketManager {
                     })
                 );
             }
+
             logger.info('Done with player ready message.');
         } catch (err) {
             logger.error(err);
+
             ws.send(
                 JSON.stringify({
                     type: 'error',
@@ -256,9 +259,11 @@ export class WebSocketManager {
         if (data && data.gameID) {
             try {
                 console.log(data);
+
                 const gameData = await this.redisClient.hgetall(
                     `game:${data.gameID}`
                 );
+
                 if (!gameData) {
                     ws.send(
                         JSON.stringify({
@@ -266,6 +271,7 @@ export class WebSocketManager {
                             message: 'Game not found'
                         })
                     );
+
                     return;
                 }
 
@@ -278,7 +284,7 @@ export class WebSocketManager {
                 const playerColor =
                     whitePlayer.username === data.username ? 'w' : 'b';
 
-                // validate turn
+                // Turn and move validations
                 if (parsedState.turn != playerColor) {
                     ws.send(
                         JSON.stringify({
@@ -316,11 +322,14 @@ export class WebSocketManager {
                         JSON.stringify(newState)
                     );
 
+                    const startTime = Date.now();
+
                     // Notify players
                     this.broadcastToGame(
                         data.gameID,
                         JSON.stringify({
                             type: 'move',
+                            startTime,
                             move: newMove,
                             state: newState,
                             duration: parseInt(gameData.duration)
@@ -331,6 +340,7 @@ export class WebSocketManager {
                     ws.send(
                         JSON.stringify({
                             type: 'move_accepted',
+                            startTime,
                             gameId: data.gameID,
                             state: newState,
                             duration: parseInt(gameData.duration)

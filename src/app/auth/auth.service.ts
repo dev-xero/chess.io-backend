@@ -26,6 +26,7 @@ class AuthService {
             validateReqBody(registerReqBody, body);
 
             const duplicate = await userService.userExists(body.username);
+
             if (duplicate) {
                 throw new UnauthorizedError(
                     'This user already exists, log in instead.'
@@ -69,17 +70,18 @@ class AuthService {
 
     public async login(req: Request, res: Response, next: NextFunction) {
         const body: ILoginRequest = req.body;
+
         try {
             validateReqBody(loginReqBody, body);
 
             const thisUser = await userService.findUser(body.username);
+        
             if (!thisUser) {
                 throw new UnauthorizedError(
                     'This user does not exist, register instead.'
                 );
             }
 
-            // compare passwords
             if (!encryption.matches(body.password, thisUser.password)) {
                 throw new UnauthorizedError('Incorrect password.');
             }
@@ -124,6 +126,7 @@ class AuthService {
         next: NextFunction
     ) {
         const body: IResetBody = req.body;
+
         try {
             if (!body.username) {
                 throw new BadRequestError(
@@ -137,18 +140,16 @@ class AuthService {
                 );
             }
 
-            // find user with this credential
             const matchingUser = await userService.findUser(body.username);
+            
             if (!matchingUser) {
                 throw new BadRequestError('No user with this username exists.');
             }
 
-            // check if secret question matches
             if (matchingUser.secretQuestion != body.secretQuestion) {
                 throw new BadRequestError('Secret question does not match.');
             }
 
-            // is it same as old password
             if (encryption.matches(body.newPassword, matchingUser.password)) {
                 throw new BadRequestError(
                     'New password is same as the old one, log in instead.'
@@ -161,10 +162,10 @@ class AuthService {
                 password: newHashedPassword
             });
 
-            // all successful
             logger.info(
                 `Successfully reset user: ${matchingUser.username} password.`
             );
+
             res.status(HttpStatus.OK).json({
                 message:
                     'Successfully reset password, log in using the new one.',
@@ -190,6 +191,7 @@ class AuthService {
 
         try {
             const token = authHeader.split(' ')[1];
+            
             let decodedToken;
 
             try {
@@ -203,6 +205,7 @@ class AuthService {
             }
 
             const username = (decodedToken as Player)?.username;
+            
             if (!username) {
                 return res.status(HttpStatus.UNAUTHORIZED).json({
                     message: 'Invalid token payload.',
