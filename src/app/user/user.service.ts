@@ -1,4 +1,5 @@
 import { IRegisterUser } from '@app/auth/interfaces/register.interface';
+import { logger } from '@core/logging';
 import { dbProvider } from '@core/providers';
 import { Player, PrismaClient } from '@prisma/client';
 
@@ -16,43 +17,71 @@ class UserService {
     }
 
     public async userExists(username: string): Promise<boolean> {
-        const record = await this.dbClient.player.findUnique({
-            where: {
-                username: username
-            }
-        });
-        return record ? true : false;
+        try {
+            const record = await this.dbClient.player.findUnique({
+                where: {
+                    username: username
+                }
+            });
+            return record ? true : false;
+        } catch (err) {
+            logger.error(err);
+            throw new Error(
+                'Failed to complete this request, try again shortly.'
+            );
+        }
     }
 
     public async findUser(username: string): Promise<Player | null> {
-        const record = await this.dbClient.player.findUnique({
-            where: {
-                username: username
-            }
-        });
-        return record;
+        try {
+            const record = await this.dbClient.player.findUnique({
+                where: {
+                    username: username
+                }
+            });
+            return record;
+        } catch (err) {
+            logger.error(err);
+            throw new Error(
+                'Failed to complete this request, try again shortly.'
+            );
+        }
     }
 
     public async create(newUser: IRegisterUser): Promise<Player> {
-        const record = await this.dbClient.player.create({
-            data: {
-                username: newUser.username,
-                password: newUser.password,
-                secretQuestion: newUser.secretQuestion,
-                authToken: newUser.authToken,
-                rating: 1200
-            }
-        });
-        return record;
+        try {
+            const record = await this.dbClient.player.create({
+                data: {
+                    username: newUser.username,
+                    password: newUser.password,
+                    secretQuestion: newUser.secretQuestion,
+                    authToken: newUser.authToken,
+                    rating: 1200
+                }
+            });
+            return record;
+        } catch (err) {
+            logger.error(err);
+            throw new Error(
+                'Failed to complete this request, try again shortly.'
+            );
+        }
     }
 
     public async update(username: string, newData: PlayerUpdateData) {
-        return await this.dbClient.player.update({
-            where: { username },
-            data: {
-                ...newData
-            }
-        });
+        try {
+            return await this.dbClient.player.update({
+                where: { username },
+                data: {
+                    ...newData
+                }
+            });
+        } catch (err) {
+            logger.error(err);
+            throw new Error(
+                'Failed to complete this request, try again shortly.'
+            );
+        }
     }
 }
 
