@@ -71,6 +71,7 @@ export class WebSocketManager {
             logger.info('WebSocket connection closed.');
             this.removeFromGames(ws);
             this.removeFromUsers(ws);
+            this.handleDisconnect(ws);
         });
     }
 

@@ -9,6 +9,30 @@ export function createGameRouter(gameService: GameService) {
     const gameRouter = Router();
 
     gameRouter.get(
+        '/challenge/:challengeID',
+        isAuthorized,
+        async (req: Request, res: Response, next: NextFunction) => {
+            try {
+                const { challengeID } = req.params;
+                const state = await gameService.getChallengeState(challengeID);
+
+                res.status(HttpStatus.OK).json(state);
+            } catch (err) {
+                logger.error(err);
+                if (err instanceof ApplicationError) {
+                    next(err);
+                } else {
+                    res.status(HttpStatus.UNPROCESSABLE).json({
+                        message: 'Unable to complete this request.',
+                        success: false,
+                        code: HttpStatus.UNPROCESSABLE
+                    });
+                }
+            }
+        }
+    );
+
+    gameRouter.get(
         '/state/:gameID',
         isAuthorized,
         async (req: Request, res: Response, next: NextFunction) => {
@@ -20,6 +44,7 @@ export function createGameRouter(gameService: GameService) {
 
             try {
                 const gameData = await gameService.getFullGameData(gameID);
+
                 res.status(HttpStatus.OK).json({
                     message: 'Completed game data request.',
                     success: true,

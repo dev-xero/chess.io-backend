@@ -75,12 +75,21 @@ export class GameService {
             opponent,
             (duration * 1000) as ChessGameDuration // to ms
         );
+
         if (!gameState) {
             throw new BadRequestError('Could not create this game.');
         }
 
         // Expire in 24 hours if abandoned
         await this.redisClient.expire(gameID, 3600 * 24);
+
+        // Set started games & expire later
+        await this.redisClient.hmset(`challenge:${challengeID}`, {
+            started: true,
+            gameID
+        });
+        await this.redisClient.expire(`challenge:${challengeID}`, 3600 * 24);
+
         // Remove pending game
         await this.redisClient.del(`pending:${challengeID}`);
 
@@ -89,12 +98,14 @@ export class GameService {
             challenger.id,
             JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
         );
+
         this.wsManager.broadcastToUser(
             opponent.id,
             JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
         );
 
         dispatch('game:accepted', [gameID]);
+
         return { gameID, duration, gameState };
     }
 
@@ -104,6 +115,7 @@ export class GameService {
         duration: ChessGameDuration
     ) {
         const validDurations = [600000, 300000, 180000] as const;
+
         if (
             !validDurations.includes(
                 duration as (typeof validDurations)[number]
@@ -160,4 +172,34 @@ export class GameService {
             throw err;
         }
     }
+
+    public async getChallengeState(
+        challengeID: string
+    ): Promise<IGameStateRequest> {
+        try {
+            const state = await this.redisClient.hgetall(
+                `challengeID:${challengeID}`
+            );
+
+            if (!state) {
+                return {
+                    started: false,
+                    gameID: null
+                };
+            }
+
+            return {
+                started: state.started == 'true',
+                gameID: state.gameID
+            };
+        } catch (err) {
+            logger.error(`Error confirming game state: ${err}`);
+            throw err;
+        }
+    }
+}
+
+interface IGameStateRequest {
+    started: boolean;
+    gameID: string | null;
 }
