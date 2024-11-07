@@ -19,16 +19,15 @@ All endpoints aside from the base must be prefixed with `/v1` before requests ar
 | **POST** | `/v1/challenge/create` | True | Creates a pending chess challenge, expires in 30 mins if unused. |
 | **POST** | `/v1/challenge/accept/:id` | True | Accepts and assigns the opponent to the challenge specified by the id. |
 | **GET** | `/v1/game/state/:id` | True | Returns a payload containing the current game position and other metadata. |
-| **POST** | `/v1/game/move/:id` | True | Processes a chess move and returns board result. |
+| **GET** | `/v1/game/challenge/:id` | True | Returns true if a chess challenge has started a game. |
 
 ## Technologies Used
 
 1. NodeJS (Typescript) with Express framework.
-2. PostgreSQL.
-3. Redis.
-4. Web sockets.
-5. Docker.
-6. AWS ECR and App Runner.
+2. PostgreSQL: primary database.
+3. Redis: in-memory game store.
+4. WebSockets Protocol: real-time low latency communication.
+5. Docker: containerization.
 
 ## Configuration
 
