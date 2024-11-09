@@ -38,14 +38,14 @@ export class WebSocketManager {
                 switch (msg.type) {
                     case 'auth':
                         this.authenticateUser(ws, msg.userId);
-                        console.log(
+                        logger.info(
                             `User with id: ${msg.userId} has been authenticated.`
                         );
                         break;
 
                     case 'join_game':
                         this.addToGame(msg.gameID, ws);
-                        console.log(
+                        logger.info(
                             `Game with id: ${msg.gameID} has been added.`
                         );
                         break;
@@ -59,7 +59,7 @@ export class WebSocketManager {
                         break;
 
                     default:
-                        console.log('Invalid message.');
+                        logger.info('Invalid message received, ignoring.');
                 }
             } catch (error) {
                 logger.error('Failed to read message data.');
@@ -144,23 +144,27 @@ export class WebSocketManager {
         });
     }
 
-    public broadcastToGame(gameId: string, message: string) {
+    public broadcastToGame(gameId: string, message: any) {
+        const stringifiedMsg = JSON.stringify(message);
         const connections = this.gameConnections.get(gameId);
+
         if (connections) {
             connections.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(message);
+                    client.send(stringifiedMsg);
                 }
             });
         }
     }
 
-    public broadcastToUser(userId: string, message: string) {
+    public broadcastToUser(userId: string, message: any) {
+        const stringifiedMsg = JSON.stringify(message);
         const connections = this.userConnections.get(userId);
+
         if (connections) {
             connections.forEach((client) => {
                 if (client.readyState === WebSocket.OPEN) {
-                    client.send(message);
+                    client.send(stringifiedMsg);
                 }
             });
         }
@@ -170,25 +174,24 @@ export class WebSocketManager {
         if (!ws.userId) return;
 
         if (!gameID) {
-            ws.send(
-                JSON.stringify({
-                    type: 'error',
-                    message: 'Provide a valid game ID.'
-                })
-            );
+            this.sendJsonWebSocketMessage(ws, {
+                type: 'error',
+                message: 'Provide a valid game ID.'
+            });
+
             return;
         }
 
         try {
             // Get game data from Redis first
             const cache = await this.redisClient.hgetall(`game:${gameID}`);
+            
             if (!cache) {
-                ws.send(
-                    JSON.stringify({
-                        type: 'error',
-                        message: 'Game not found'
-                    })
-                );
+                this.sendJsonWebSocketMessage(ws, {
+                    type: 'error',
+                    message: 'Game not found.'
+                });
+
                 return;
             }
 
@@ -210,73 +213,62 @@ export class WebSocketManager {
                 readyPlayers.has(whitePlayer.id) &&
                 readyPlayers.has(blackPlayer.id)
             ) {
-                this.broadcastToGame(
-                    gameID,
-                    JSON.stringify({
-                        type: 'game_start',
-                        game: {
-                            startTime: Date.now(),
-                            duration: parseInt(gameData.duration),
-                            state: gameData.state,
-                            whitePlayer: gameData.whitePlayer,
-                            blackPlayer: gameData.blackPlayer
-                        }
-                    })
-                );
+                this.broadcastToGame(gameID, {
+                    type: 'game_start',
+                    game: {
+                        startTime: Date.now(),
+                        duration: parseInt(gameData.duration),
+                        state: gameData.state,
+                        whitePlayer: gameData.whitePlayer,
+                        blackPlayer: gameData.blackPlayer
+                    }
+                });
             } else {
-                this.broadcastToGame(
-                    gameID,
-                    JSON.stringify({
-                        type: 'waiting_for_opponent',
-                        readyPlayers: Array.from(readyPlayers)
-                    })
-                );
+                this.broadcastToGame(gameID, {
+                    type: 'waiting_for_opponent',
+                    readyPlayers: Array.from(readyPlayers)
+                });
             }
 
             logger.info('Done with player ready message.');
         } catch (err) {
             logger.error(err);
 
-            ws.send(
-                JSON.stringify({
-                    type: 'error',
-                    message: 'Failed to handle ready state.'
-                })
-            );
+            this.sendJsonWebSocketMessage(ws, {
+                type: 'error',
+                message: 'Failed to handle ready state.'
+            });
         }
     }
 
     private async handleMove(ws: ExtendedWebSocket, data: GameMove) {
         if (!ws.userId) {
-            ws.send(
-                JSON.stringify({
-                    type: 'error',
-                    message: 'Unauthenticated.'
-                })
-            );
+            this.sendJsonWebSocketMessage(ws, {
+                type: 'error',
+                message: 'Unauthenticated.'
+            });
+
             return;
         }
 
         if (data && data.gameID) {
             try {
-                console.log(data);
-
                 const gameData = await this.redisClient.hgetall(
                     `game:${data.gameID}`
                 );
 
                 if (!gameData) {
-                    ws.send(
-                        JSON.stringify({
-                            type: 'error',
-                            message: 'Game not found'
-                        })
-                    );
+                    this.sendJsonWebSocketMessage(ws, {
+                        type: 'error',
+                        message: 'Game not found.'
+                    });
 
                     return;
                 }
 
-                console.log(gameData);
+                logger.info(
+                    `Game ${data.gameID} data: ${JSON.stringify(gameData)}`
+                );
 
                 const parsedState: GameState = JSON.parse(gameData.state);
                 const whitePlayer = JSON.parse(gameData.whitePlayer);
@@ -287,12 +279,11 @@ export class WebSocketManager {
 
                 // Turn and move validations
                 if (parsedState.turn != playerColor) {
-                    ws.send(
-                        JSON.stringify({
-                            type: 'error',
-                            message: 'Not your turn.'
-                        })
-                    );
+                    this.sendJsonWebSocketMessage(ws, {
+                        type: 'error',
+                        message: 'Not your turn.'
+                    });
+
                     return;
                 }
 
@@ -326,44 +317,36 @@ export class WebSocketManager {
                     const startTime = Date.now();
 
                     // Notify players
-                    this.broadcastToGame(
-                        data.gameID,
-                        JSON.stringify({
-                            type: 'move',
-                            startTime,
-                            move: newMove,
-                            state: newState,
-                            duration: parseInt(gameData.duration)
-                        })
-                    );
+                    this.broadcastToGame(data.gameID, {
+                        type: 'move',
+                        startTime,
+                        move: newMove,
+                        state: newState,
+                        duration: parseInt(gameData.duration)
+                    });
 
                     // Acknowledge move to sender
-                    ws.send(
-                        JSON.stringify({
-                            type: 'move_accepted',
-                            startTime,
-                            gameId: data.gameID,
-                            state: newState,
-                            duration: parseInt(gameData.duration)
-                        })
-                    );
+                    this.sendJsonWebSocketMessage(ws, {
+                        type: 'move_accepted',
+                        startTime,
+                        gameId: data.gameID,
+                        state: newState,
+                        duration: parseInt(gameData.duration)
+                    });
                 } catch (error) {
-                    ws.send(
-                        JSON.stringify({
-                            type: 'error',
-                            message: 'Invalid move'
-                        })
-                    );
+                    this.sendJsonWebSocketMessage(ws, {
+                        type: 'error',
+                        message: 'Invalid move.'
+                    });
+
                     return;
                 }
             } catch (err) {
                 logger.error(err);
-                ws.send(
-                    JSON.stringify({
-                        type: 'error',
-                        message: err.message ?? 'This move could not be made'
-                    })
-                );
+                this.sendJsonWebSocketMessage(ws, {
+                    type: 'error',
+                    message: err.message ?? 'This move could not be made.'
+                });
             }
         }
     }
@@ -389,5 +372,10 @@ export class WebSocketManager {
 
         this.removeFromGames(ws);
         this.removeFromUsers(ws);
+    }
+
+    private sendJsonWebSocketMessage(ws: ExtendedWebSocket, msg: any) {
+        const stringifiedMsg = JSON.stringify(msg);
+        ws.send(stringifiedMsg);
     }
 }
