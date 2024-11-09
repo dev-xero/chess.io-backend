@@ -15,6 +15,7 @@ model Player {
   authToken      String?
   rating         Int
   stats          PlayerStats?
+  joinedOn       DateTime
 }
 
 model PlayerStats {

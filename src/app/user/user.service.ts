@@ -1,4 +1,5 @@
 import { IRegisterUser } from '@app/auth/interfaces/register.interface';
+import { DEFAULT_RATING } from '@constants/chess';
 import { logger } from '@core/logging';
 import { dbProvider } from '@core/providers';
 import { Player, PrismaClient } from '@prisma/client';
@@ -56,9 +57,24 @@ class UserService {
                     password: newUser.password,
                     secretQuestion: newUser.secretQuestion,
                     authToken: newUser.authToken,
-                    rating: 1200
+                    rating: DEFAULT_RATING,
+                    joinedOn: new Date()
                 }
             });
+
+            // Initialize player stats
+            await this.dbClient.playerStats.create({
+                data: {
+                    playerID: record.id,
+                    rating: DEFAULT_RATING,
+                    wins: 0,
+                    losses: 0,
+                    gamesPlayed: 0
+                }
+            });
+
+            logger.info('Created new player with stats.');
+
             return record;
         } catch (err) {
             logger.error(err);
