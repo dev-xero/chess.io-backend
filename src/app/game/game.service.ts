@@ -94,15 +94,17 @@ export class GameService {
         await this.redisClient.del(`pending:${challengeID}`);
 
         // Broadcast game started event to target clients
-        this.wsManager.broadcastToUser(
-            challenger.id,
-            JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
-        );
+        this.wsManager.broadcastToUser(challenger.id, {
+            type: 'challenge_accepted',
+            gameID,
+            gameState
+        });
 
-        this.wsManager.broadcastToUser(
-            opponent.id,
-            JSON.stringify({ type: 'challenge_accepted', gameID, gameState })
-        );
+        this.wsManager.broadcastToUser(opponent.id, {
+            type: 'challenge_accepted',
+            gameID,
+            gameState
+        });
 
         dispatch('game:accepted', [gameID]);
 
