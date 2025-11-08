@@ -1,13 +1,13 @@
 export interface GameEvents {
-    onGameCreated(userId: string, data: any): void;
-    onMove(gameId: string, data: any): void;
-    onGameOver(gameId: string, data: any): void;
+    onGameCreated(userId: string, data: unknown): void;
+    onMove(gameId: string, data: unknown): void;
+    onGameOver(gameId: string, data: unknown): void;
 }
 
 export interface AcceptedGame {
     gameID: string;
     duration: number;
-    gameState: any;
+    gameState: unknown;
 }
 
 export interface GamePlayer {
@@ -40,7 +40,7 @@ export interface GameMove {
     username: string;
     from: string;
     to: string;
-    whiteTTP: number,
-    blackTTP: number,
+    whiteTTP: number;
+    blackTTP: number;
     promotion: string;
 }
