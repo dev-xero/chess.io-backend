@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+    backend:
+        container_name: 'chessio-backend'
+        build: .
+        ports:
+            - 8080:8080
+        depends_on:
+            redis:
+                condition: service_healthy
+            postgres:
+                condition: service_healthy
+
+    postgres:
+        image: 'postgres:alpine'
+        environment:
+            # Change as needed
+            POSTGRES_DB: chessio
+            POSTGRES_PASSWORD: 123
+            POSTGRES_USER: postgres
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        ports:
+            - 5435:5432
+        restart: on-failure:3
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U postgres']
+            interval: 10s
+            retries: 5
+            start_period: 30s
+            timeout: 10s
+
+    redis:
+        image: 'redis:6.2-alpine'
+        restart: on-failure:1
+        command: redis-server --save 20 1 --loglevel warning --requirepass 3456
+        ports:
+            - 6379:6379
+
+volumes:
+    postgres_data:

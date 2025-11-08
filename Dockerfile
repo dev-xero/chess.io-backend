@@ -1,38 +1,48 @@
 # Build stage
-FROM node:18-alpine AS build
+# FROM node:18-alpine AS build
+# WORKDIR /app
+
+# COPY package.json pnpm-lock.yaml ./
+# RUN npx pnpm install
+
+# COPY . .
+# RUN npx prisma generate
+# RUN npx pnpm run build
+
+# # Prod stage
+# FROM node:18-alpine
+# WORKDIR /app
+
+# COPY --from=build /app/build ./build
+# COPY package.json yarn.lock ./
+# COPY --from=build /app/prisma ./prisma
+
+# RUN yarn install --production --frozen-lockfile
+# RUN yarn prisma migrate deploy
+
+# EXPOSE 8000
+# CMD ["node", "--experimental-specifier-resolution=node", "build/server.js"]
+
+FROM node:20-slim AS base
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+
+RUN corepack enable
+
+COPY . /app
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+FROM base AS prod-deps
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 
-COPY . .
-RUN yarn prisma generate
-RUN yarn build
+FROM base AS build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm run build
 
-# Prod stage
-FROM node:18-alpine
-WORKDIR /app
+FROM base
+COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=build /app/build /app/build
 
-COPY --from=build /app/build ./build
-COPY package.json yarn.lock ./
-COPY --from=build /app/prisma ./prisma
-# COPY .env.production .env
-
-ARG PORT
-ARG NODE_ENV
-ARG PG_DATABASE_URL
-ARG JWT_SECRET
-
-RUN touch .env
-RUN echo "PORT=${PORT:-8000}" >> .env
-RUN echo "NODE_ENV=${NODE_ENV:-production}" >> .env
-RUN echo "PG_DATABASE_URL=${PG_DATABASE_URL}" >> .env
-RUN echo "JWT_SECRET=${JWT_SECRET}" >> .env
-
-# RUN cat .env
-
-RUN yarn install --production --frozen-lockfile
-RUN yarn prisma migrate deploy
-
-EXPOSE 8000
-CMD ["node", "--experimental-specifier-resolution=node", "build/server.js"]
+EXPOSE 8080
+CMD [ "pnpm", "start:prod" ]
