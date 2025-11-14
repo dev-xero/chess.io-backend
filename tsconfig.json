@@ -23,8 +23,8 @@
             "@app/*": ["src/application/*"],
             "@core/*": ["src/core/*"],
             "@constants/*": ["src/constants/*"]
-        },
-        "typeRoots": ["./node_modules/@types", "./src/types"]
+        }
+        // "typeRoots": ["./node_modules/@types", "./src/types"]
     },
     "ts-node": {
         "require": ["tsconfig-paths/register"]

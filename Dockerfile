@@ -1,27 +1,45 @@
 FROM node:20-slim AS base
 
 ENV PNPM_HOME="/pnpm"
-ENV PATH="$PNPM_HOME:$PATH"
+ENV PATH="${PNPM_HOME}:$PATH"
 
+RUN apt-get update -y && apt-get install -y openssl
 RUN corepack enable
 
-COPY . /app
 WORKDIR /app
 
+# -- Dependencies Stage
+FROM base AS deps
+
+COPY pnpm-lock.yaml package.json ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+
+COPY . .
+
+# -- Build Stage
+FROM deps AS build
+
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm exec prisma generate
+
+RUN pnpm exec tsc && pnpm exec tsc-alias
+
+# -- Prod Dependencies Stage
 FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+COPY pnpm-lock.yaml package.json ./
+RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store \
+    pnpm install --prod --frozen-lockfile
 
-FROM base AS build
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm exec prisma generate
-COPY --from=prod-deps /app/prisma /app/prisma
-# haven't found a workaround for pnpm
-RUN npx tsc
-RUN npx tsc-alias
+# -- Final Stage
+FROM node:20-slim AS runtime
 
-FROM base
-COPY --from=prod-deps /app/node_modules /app/node_modules
-COPY --from=build /app/build /app/build
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=build /app/build ./build
 
 EXPOSE 8080
-CMD [ "pnpm", "start:prod" ]
+CMD ["node", "build/server.js"]

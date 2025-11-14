@@ -4,9 +4,9 @@
     "main": "server.js",
     "scripts": {
         "clean": "rm -rf build tsconfig.tsbuildinfo",
-        "build": "npx tsc && npx tsc-alias",
+        "build": "pnpm tsc-alias && pnpm tsc",
         "dev": "nodemon",
-        "prod": "node build/server.js"
+        "prod": "node ./build/server.js"
     },
     "keywords": [
         "chess",
@@ -20,32 +20,30 @@
     "description": "Backend for chess.io",
     "devDependencies": {
         "@eslint/js": "^9.39.1",
-        "@types/bcrypt": "^5.0.2",
         "@types/compression": "^1.8.1",
         "@types/cors": "^2.8.19",
         "@types/express": "^5.0.5",
         "@types/express-ws": "^3.0.6",
         "@types/jsonwebtoken": "^9.0.10",
-        "@types/node": "^22.19.0",
+        "@types/node": "^22.19.1",
         "@types/uuid": "^10.0.0",
         "eslint": "^9.39.1",
         "globals": "^15.15.0",
-        "nodemon": "^3.1.10",
+        "nodemon": "^3.1.11",
         "prettier": "^3.6.2",
         "prisma": "^5.22.0",
         "ts-node": "^10.9.2",
         "tsc-alias": "^1.8.16",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.46.3"
+        "typescript-eslint": "^8.46.4"
     },
     "dependencies": {
         "@prisma/client": "^5.22.0",
         "@types/chess.js": "^0.13.7",
-        "@types/ioredis": "^5.0.0",
         "@types/ws": "^8.18.1",
         "app-root-path": "^3.1.0",
-        "bcrypt": "^5.1.1",
+        "argon2": "^0.44.0",
         "body-parser": "^1.20.3",
         "chess.js": "^1.4.0",
         "compression": "^1.8.1",

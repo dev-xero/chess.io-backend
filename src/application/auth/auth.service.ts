@@ -6,7 +6,7 @@ import { userService } from '@app/user';
 import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';
 import { validateReqBody } from '@core/utils/validator';
 import { registerReqBody } from '@core/schemas';
-import { JWT, encryption, omitFields } from '@core/utils';
+import { JWT, hashManager, omitFields } from '@core/utils';
 import { config } from '@core/config';
 import { loginReqBody } from '@core/schemas/login.req.schema';
 import { ILoginRequest, IRegisterUser } from './interfaces';
@@ -33,7 +33,7 @@ class AuthService {
                 );
             }
 
-            body.password = encryption.encrypt(body.password);
+            body.password = await hashManager.hashPassword(body.password);
 
             const authToken = this.tokens.generateToken({
                 username: body.username
@@ -82,7 +82,12 @@ class AuthService {
                 );
             }
 
-            if (!encryption.matches(body.password, thisUser.password)) {
+            if (
+                !(await hashManager.verifyPassword(
+                    body.password,
+                    thisUser.password
+                ))
+            ) {
                 throw new UnauthorizedError('Incorrect password.');
             }
 
@@ -150,13 +155,20 @@ class AuthService {
                 throw new BadRequestError('Secret question does not match.');
             }
 
-            if (encryption.matches(body.newPassword, matchingUser.password)) {
+            if (
+                await hashManager.verifyPassword(
+                    matchingUser.password,
+                    body.newPassword
+                )
+            ) {
                 throw new BadRequestError(
                     'New password is same as the old one, log in instead.'
                 );
             }
 
-            const newHashedPassword = encryption.encrypt(body.newPassword);
+            const newHashedPassword = await hashManager.hashPassword(
+                body.newPassword
+            );
 
             await userService.update(body.username, {
                 password: newHashedPassword
