@@ -63,7 +63,7 @@ class AuthService {
                 }
             });
         } catch (err) {
-            logger.error(err)
+            logger.error(err);
             next(err);
         }
     }
@@ -75,7 +75,7 @@ class AuthService {
             validateReqBody(loginReqBody, body);
 
             const thisUser = await userService.findUser(body.username);
-        
+
             if (!thisUser) {
                 throw new UnauthorizedError(
                     'This user does not exist, register instead.'
@@ -141,7 +141,7 @@ class AuthService {
             }
 
             const matchingUser = await userService.findUser(body.username);
-            
+
             if (!matchingUser) {
                 throw new BadRequestError('No user with this username exists.');
             }
@@ -191,12 +191,12 @@ class AuthService {
 
         try {
             const token = authHeader.split(' ')[1];
-            
             let decodedToken;
 
             try {
                 decodedToken = this.tokens.verifyToken(token);
             } catch (error) {
+                logger.warn('Failed to decode token:', error);
                 return res.status(HttpStatus.UNAUTHORIZED).json({
                     message: 'Invalid token provided.',
                     success: false,
@@ -205,7 +205,7 @@ class AuthService {
             }
 
             const username = (decodedToken as Player)?.username;
-            
+
             if (!username) {
                 return res.status(HttpStatus.UNAUTHORIZED).json({
                     message: 'Invalid token payload.',

@@ -4,6 +4,7 @@ import { JWT } from '@core/utils';
 import { config } from '@core/config';
 import { logger } from '@core/logging';
 
+// ! TODO: Rename 'handlers' into 'middleware'
 class AuthHandler {
     public async isAuthorized(req: Request, _: Response, next: NextFunction) {
         const authHeader = req.headers.authorization;
@@ -22,11 +23,14 @@ class AuthHandler {
             decodedToken = jwt.verifyToken(token);
             if (!decodedToken) {
                 return next(
-                    new UnauthorizedError('This token is expired or blacklisted.')
+                    new UnauthorizedError(
+                        'This token is expired or blacklisted.'
+                    )
                 );
             }
-
-            req.user = decodedToken;
+            // !TODO: Testing purposes
+            console.log('here is a token:', decodedToken);
+            // req.user = decodedToken;
         } catch (err) {
             logger.error(err);
             return next(new UnauthorizedError('Invalid bearer token.'));

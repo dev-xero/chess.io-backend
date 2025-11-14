@@ -1,14 +1,14 @@
 import { HttpStatus } from '@constants/index';
 import { ApplicationError } from '@core/errors';
 import { logger } from '@core/logging';
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 
 export class ErrorHandler {
     handle = async (
         error: Error,
         req: Request,
-        res: Response,
-        _: NextFunction
+        res: Response
+        // _: NextFunction
     ) => {
         let statusCode: number = HttpStatus.INTERNAL_SERVER_ERROR;
         let message = 'An internal server error occurred.';

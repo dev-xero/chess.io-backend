@@ -20,10 +20,11 @@
         "esModuleInterop": true,
         "baseUrl": "./",
         "paths": {
-            "@app/*": ["src/app/*"],
+            "@app/*": ["src/application/*"],
             "@core/*": ["src/core/*"],
             "@constants/*": ["src/constants/*"]
-        }
+        },
+        "typeRoots": ["./node_modules/@types", "./src/types"]
     },
     "ts-node": {
         "require": ["tsconfig-paths/register"]

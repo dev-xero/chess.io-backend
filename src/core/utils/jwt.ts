@@ -1,5 +1,8 @@
-import { TOKEN_EXPIRES_IN } from '@constants/encryption';
 import jwt from 'jsonwebtoken';
+
+export interface JwtClaims {
+    username: string;
+}
 
 export class JWT {
     private secret: string;
@@ -8,17 +11,17 @@ export class JWT {
         this.secret = secret;
     }
 
-    public generateToken(payload: any, expiresIn: string = TOKEN_EXPIRES_IN) {
+    public generateToken(payload: JwtClaims) {
         return jwt.sign(payload, this.secret, {
-            expiresIn
+            expiresIn: '1hr'
         });
     }
 
-    public verifyToken(claim: any) {
+    public verifyToken(claim: string) {
         try {
             return jwt.verify(claim, this.secret);
         } catch {
-            return null; // invalid / tampered
+            return null;
         }
     }
 }

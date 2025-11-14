@@ -20,8 +20,6 @@ git clone https://github.com/dev-xero/chess.io-backend.git chessio-backend
 ```
 
 1. Rename .env.example to .env and fill in the fields with your own Postgres DB URI, Redis URI, JWT secret and remote url.
-2. Generate the Prisma client by running `yarn prisma generate`.
-3. Perform relevant db migrations by using the script: `migrations.sh`.
-4. To run the server in a dev environment with full reloads, use `server.sh`.
-5. To build the production code, use `yarn start:prod`.
-6. To cleanup build files, use the `clean.sh` script.
+2. Generate the Prisma client by running `pnpm prisma generate`.
+3. Use `docker-compose up` to start the api along with the postgres and redis instances.
+4. To build the backend docker image, use `docker-compose build backend'.

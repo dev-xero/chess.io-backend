@@ -4,19 +4,18 @@ import expressWs from 'express-ws';
 import { dispatch } from '../core/events/app.events';
 import { appRouter } from './app.router';
 import helmet from 'helmet';
-// import * as parser from 'body-parser';
 import compression from 'compression';
 import cors from 'cors';
 import { NotFoundErrorHandler } from '@core/handlers';
 import { HttpStatus } from '@constants/index';
 import { authRouter } from './auth/auth.module';
 import { ErrorHandler } from '@core/middlewares';
-import { IncomingMessage, createServer } from 'http';
+import { IncomingMessage } from 'http';
 import { ExtendedWebSocket, WebSocketManager } from '@core/websocket';
 import { RedisClient } from '@core/providers';
-import { createChallengeRouter } from './challenge/challenge.module';
+// import { createChallengeRouter } from './challenge/challenge.module';
 import { GameService, createGameRouter } from './game';
-import { ChallengeService } from './challenge';
+// import { ChallengeService } from './challenge';
 
 export async function startApplication() {
     const expressServer = express();
@@ -44,14 +43,14 @@ export async function startApplication() {
     application.use(cors(corsOptions));
 
     // Routers
-    const challengeService = new ChallengeService(gameService);
-    const challengeRouter = createChallengeRouter(challengeService);
+    // const challengeService = new ChallengeService(gameService);
+    // const challengeRouter = createChallengeRouter(challengeService);
     const gameRouter = createGameRouter(gameService);
 
     // Routes
     application.use('/v1', appRouter);
     application.use('/v1/auth', authRouter);
-    application.use('/v1/challenge', challengeRouter);
+    // application.use('/v1/challenge', challengeRouter);
     application.use('/v1/game', gameRouter);
 
     application.get('/', (_: Request, res: Response) => {
@@ -67,5 +66,6 @@ export async function startApplication() {
     application.use(notFoundHandler.handle);
     application.use(errorHandler.handle);
 
+    // !TODO: literally zero point to dispatching
     application.listen(port, () => dispatch('app:up'));
 }

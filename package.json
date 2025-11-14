@@ -3,15 +3,10 @@
     "version": "0.1.2",
     "main": "server.js",
     "scripts": {
-        "format": "prettier --write .",
-        "lint": "eslint .",
-        "lint:fix": "eslint . --fix",
-        "prisma:fmt": "yarn prisma format",
-        "prisma:mgr": "yarn prisma migrate dev --name init",
         "clean": "rm -rf build tsconfig.tsbuildinfo",
-        "build": "npx tsc && tsc-alias",
-        "start:prod": "npx build && node --experimental-specifier-resolution=node build/server.js",
-        "start:dev": "nodemon"
+        "build": "npx tsc && npx tsc-alias",
+        "dev": "nodemon",
+        "prod": "node build/server.js"
     },
     "keywords": [
         "chess",
@@ -22,7 +17,7 @@
     ],
     "author": "dev-xero",
     "license": "GPL-3.0",
-    "description": "Backend for ChessIO",
+    "description": "Backend for chess.io",
     "devDependencies": {
         "@eslint/js": "^9.39.1",
         "@types/bcrypt": "^5.0.2",
