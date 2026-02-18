@@ -2,6 +2,6 @@
     "watch": ["src"],
     "ext": "ts,js",
     "ignore": ["src/**/*.test.ts", "node_modules"],
-    "exec": "ts-node src/server.ts",
+    "exec": "ts-node -r tsconfig-paths/register src/server.ts",
     "legacyWatch": true
 }

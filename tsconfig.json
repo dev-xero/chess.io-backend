@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
-        "module": "commonjs",
-        "declaration": true,
+        "declaration": false,
         "removeComments": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
@@ -20,13 +19,16 @@
         "esModuleInterop": true,
         "baseUrl": "./",
         "paths": {
+            "@/*": ["src/*"],
             "@app/*": ["src/application/*"],
             "@core/*": ["src/core/*"],
-            "@constants/*": ["src/constants/*"]
-        }
-        // "typeRoots": ["./node_modules/@types", "./src/types"]
+            "@constants/*": ["src/constants/*"],
+            "@generated/*": ["src/generated/*"]
+        },
     },
-    "ts-node": {
-        "require": ["tsconfig-paths/register"]
-    }
+    "exclude": [
+      "node_modules",
+      "build",
+      "src/generated/**/*"
+    ]
 }

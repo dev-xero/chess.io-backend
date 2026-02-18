@@ -3,13 +3,8 @@ import { WebSocket, Server as WebSocketServer } from 'ws';
 import { logger } from '@core/logging';
 import { RedisClient } from '@core/providers';
 import { dispatch } from '..';
-import {
-    FullGameData,
-    GameMove,
-    GameState
-} from '@app/game/interfaces/game.interfaces';
+import { GameMove, GameState } from '@app/game/interfaces/game.interfaces';
 import { Chess } from 'chess.js';
-import { number } from 'joi';
 
 export interface ExtendedWebSocket extends WebSocket {
     userId?: string;
@@ -185,7 +180,7 @@ export class WebSocketManager {
         try {
             // Get game data from Redis first
             const cache = await this.redisClient.hgetall(`game:${gameID}`);
-            
+
             if (!cache) {
                 this.sendJsonWebSocketMessage(ws, {
                     type: 'error',
@@ -334,6 +329,7 @@ export class WebSocketManager {
                         duration: parseInt(gameData.duration)
                     });
                 } catch (error) {
+                    logger.error(error);
                     this.sendJsonWebSocketMessage(ws, {
                         type: 'error',
                         message: 'Invalid move.'

@@ -1,5 +1,5 @@
 import { dispatch } from '@core/events/app.events';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '@generated/cilent';
 
 class DatabaseProvider {
     private prisma: PrismaClient;

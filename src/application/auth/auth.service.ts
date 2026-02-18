@@ -1,6 +1,6 @@
 import { BadRequestError, UnauthorizedError } from '@core/errors';
 import { dispatch } from '@core/events';
-import { Player } from '@prisma/client';
+import { Player } from '@generated/cilent';
 import { NextFunction, Request, Response } from 'express';
 import { userService } from '@app/user';
 import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';

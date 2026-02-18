@@ -5,7 +5,7 @@
     "scripts": {
         "clean": "rm -rf build tsconfig.tsbuildinfo",
         "build": "pnpm tsc-alias && pnpm tsc",
-        "dev": "nodemon",
+        "dev": "nodemon && resolve-tspaths",
         "prod": "node ./build/server.js"
     },
     "keywords": [
@@ -41,6 +41,7 @@
     "dependencies": {
         "@prisma/client": "^5.22.0",
         "@types/chess.js": "^0.13.7",
+        "@types/module-alias": "^2.0.4",
         "@types/ws": "^8.18.1",
         "app-root-path": "^3.1.0",
         "argon2": "^0.44.0",
@@ -57,8 +58,26 @@
         "ioredis": "^5.8.2",
         "joi": "^17.13.3",
         "jsonwebtoken": "^9.0.2",
+        "resolve-tspaths": "^0.8.23",
         "uuid": "^10.0.0",
         "winston": "^3.18.3",
         "ws": "^8.18.3"
+    },
+    "_moduleAliases": {
+        "@/*": [
+            "src/*"
+        ],
+        "@app/*": [
+            "src/application/*"
+        ],
+        "@core/*": [
+            "src/core/*"
+        ],
+        "@constants/*": [
+            "src/constants/*"
+        ],
+        "@generated/*": [
+            "src/generated/*"
+        ]
     }
 }
