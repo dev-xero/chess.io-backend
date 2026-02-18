@@ -1,10 +1,14 @@
-import { dbProvider } from '@core/providers';
+import { databaseManager } from '@core/providers';
 import { shutdown } from '@core/utils/shutdown';
 import { startApplication } from './application';
 
-dbProvider
-    .connect()
-    .then(() => {
+async function startServer() {
+    try {
+        await databaseManager.establishConnection();
         startApplication();
-    })
-    .catch((err) => shutdown(err));
+    } catch (ex) {
+        shutdown(ex);
+    }
+}
+
+startServer();

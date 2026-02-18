@@ -1,377 +1,388 @@
-import { IncomingMessage } from 'http';
-import { WebSocket, Server as WebSocketServer } from 'ws';
-import { logger } from '@core/logging';
-import { RedisClient } from '@core/providers';
-import { dispatch } from '..';
-import { GameMove, GameState } from '@app/game/interfaces/game.interfaces';
-import { Chess } from 'chess.js';
+// import { IncomingMessage } from 'http';
+// import { WebSocket, Server as WebSocketServer } from 'ws';
+// import { logger } from '@core/logging';
+// import { GameMove, GameState } from '@app/game/interfaces/game.interfaces';
+// import { Chess } from 'chess.js';
+// import Redis from 'ioredis';
 
-export interface ExtendedWebSocket extends WebSocket {
-    userId?: string;
-}
+// // TODO - I need to know what type of data is sent here. Temporary glue.
+// // Major refactoring here.
+// type GameMsg = {
+//     gameId: string,
+//     type: string,
+//     game: {
+//         startTime: number,
+//         ...GameState,
+        
+//     }
+// }
 
-export class WebSocketManager {
-    private wss: WebSocketServer;
-    private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
-    private userConnections: Map<string, ExtendedWebSocket[]> = new Map();
-    private playerReadyStates: Map<string, Set<string>> = new Map();
+// export interface ExtendedWebSocket extends WebSocket {
+//     userId?: string;
+// }
 
-    constructor(private redisClient: RedisClient) {
-        this.wss = new WebSocketServer({ noServer: true });
-        this.init();
-    }
+// export class WebSocketManager {
+//     private wss: WebSocketServer;
+//     private gameConnections: Map<string, ExtendedWebSocket[]> = new Map();
+//     private userConnections: Map<string, ExtendedWebSocket[]> = new Map();
+//     private playerReadyStates: Map<string, Set<string>> = new Map();
 
-    public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
-        this.wss.emit('connection', ws, req);
+//     constructor(private redisClient: Redis) {
+//         this.wss = new WebSocketServer({ noServer: true });
+//         this.init();
+//     }
 
-        logger.info('WebSocket connection established.');
+//     public handleUpgrade(req: IncomingMessage, ws: ExtendedWebSocket) {
+//         this.wss.emit('connection', ws, req);
 
-        ws.on('message', (message: string) => {
-            try {
-                const msg = JSON.parse(message);
+//         logger.info('WebSocket connection established.');
 
-                switch (msg.type) {
-                    case 'auth':
-                        this.authenticateUser(ws, msg.userId);
-                        logger.info(
-                            `User with id: ${msg.userId} has been authenticated.`
-                        );
-                        break;
+//         ws.on('message', (message: string) => {
+//             try {
+//                 const msg = JSON.parse(message);
 
-                    case 'join_game':
-                        this.addToGame(msg.gameID, ws);
-                        logger.info(
-                            `Game with id: ${msg.gameID} has been added.`
-                        );
-                        break;
+//                 switch (msg.type) {
+//                     case 'auth':
+//                         this.authenticateUser(ws, msg.userId);
+//                         logger.info(
+//                             `User with id: ${msg.userId} has been authenticated.`
+//                         );
+//                         break;
 
-                    case 'player_ready':
-                        this.handlePlayerReady(ws, msg.gameID);
-                        break;
+//                     case 'join_game':
+//                         this.addToGame(msg.gameID, ws);
+//                         logger.info(
+//                             `Game with id: ${msg.gameID} has been added.`
+//                         );
+//                         break;
 
-                    case 'move':
-                        this.handleMove(ws, msg.data);
-                        break;
+//                     case 'player_ready':
+//                         this.handlePlayerReady(ws, msg.gameID);
+//                         break;
 
-                    default:
-                        logger.info('Invalid message received, ignoring.');
-                }
-            } catch (error) {
-                logger.error('Failed to read message data.');
-                logger.error(error);
-            }
-        });
+//                     case 'move':
+//                         this.handleMove(ws, msg.data);
+//                         break;
 
-        ws.on('close', () => {
-            logger.info('WebSocket connection closed.');
-            this.removeFromGames(ws);
-            this.removeFromUsers(ws);
-            this.handleDisconnect(ws);
-        });
-    }
+//                     default:
+//                         logger.info('Invalid message received, ignoring.');
+//                 }
+//             } catch (error) {
+//                 logger.error('Failed to read message data.');
+//                 logger.error(error);
+//             }
+//         });
 
-    private async init() {
-        // Connect and subscribe to games with redis
-        await this.redisClient.connect();
-        await this.redisClient.subscribe('game_updates', (message) => {
-            const update = JSON.parse(message);
-            dispatch('game:update');
-            this.broadcastToGame(update.gameId, JSON.stringify(update));
-        });
-    }
+//         ws.on('close', () => {
+//             logger.info('WebSocket connection closed.');
+//             this.removeFromGames(ws);
+//             this.removeFromUsers(ws);
+//             this.handleDisconnect(ws);
+//         });
+//     }
 
-    private authenticateUser(ws: ExtendedWebSocket, userId: string) {
-        ws.userId = userId;
-        if (userId) {
-            if (!this.userConnections.has(userId))
-                this.userConnections.set(userId, []);
+//     private async init() {
+//         // Connect and subscribe to games with redis
+//         await this.redisClient.connect();
+//         await this.redisClient.subscribe('game_updates', (err, message: string) => {
+//             const update: GameMsg = JSON.parse(message);
+//             this.broadcastToGame(update.gameId, JSON.stringify(update));
+//         });
+//     }
 
-            this.userConnections.get(userId)!.push(ws);
-            this.broadcastToUser(userId, 'successfully authenticated.');
-        }
-    }
+//     private authenticateUser(ws: ExtendedWebSocket, userId: string) {
+//         ws.userId = userId;
+//         if (userId) {
+//             if (!this.userConnections.has(userId))
+//                 this.userConnections.set(userId, []);
 
-    private addToGame(gameID: string, ws: ExtendedWebSocket) {
-        if (!this.gameConnections.has(gameID))
-            this.gameConnections.set(gameID, []);
+//             this.userConnections.get(userId)!.push(ws);
+//             this.broadcastToUser(userId, 'successfully authenticated.');
+//         }
+//     }
 
-        // they can't be added more than twice
-        if (!this.gameConnections.get(gameID)!.includes(ws))
-            this.gameConnections.get(gameID)!.push(ws);
-        else logger.info('This user is already present, skipping.');
-    }
+//     private addToGame(gameID: string, ws: ExtendedWebSocket) {
+//         if (!this.gameConnections.has(gameID))
+//             this.gameConnections.set(gameID, []);
 
-    // remove ws connections from games
-    private removeFromGames(ws: ExtendedWebSocket) {
-        this.gameConnections.forEach((connections, gameId) => {
-            const index = connections.indexOf(ws);
-            if (index !== -1) {
-                connections.splice(index, 1);
-                if (connections.length === 0) {
-                    this.gameConnections.delete(gameId);
-                }
-            }
-        });
-    }
+//         // they can't be added more than twice
+//         if (!this.gameConnections.get(gameID)!.includes(ws))
+//             this.gameConnections.get(gameID)!.push(ws);
+//         else logger.info('This user is already present, skipping.');
+//     }
 
-    // removes from users map if it exists
-    private removeFromUsers(ws: ExtendedWebSocket) {
-        if (ws.userId) {
-            const userConnections = this.userConnections.get(ws.userId);
-            if (userConnections) {
-                const index = userConnections.indexOf(ws);
-                if (index !== -1) {
-                    userConnections.splice(index, 1);
-                    if (userConnections.length === 0) {
-                        this.userConnections.delete(ws.userId);
-                    }
-                }
-            }
-        }
-    }
+//     // remove ws connections from games
+//     private removeFromGames(ws: ExtendedWebSocket) {
+//         this.gameConnections.forEach((connections, gameId) => {
+//             const index = connections.indexOf(ws);
+//             if (index !== -1) {
+//                 connections.splice(index, 1);
+//                 if (connections.length === 0) {
+//                     this.gameConnections.delete(gameId);
+//                 }
+//             }
+//         });
+//     }
 
-    // general purpose broadcasts
-    public broadcast(message: string) {
-        this.wss.clients.forEach((client) => {
-            if (client.readyState === WebSocket.OPEN) {
-                client.send(message);
-            }
-        });
-    }
+//     // removes from users map if it exists
+//     private removeFromUsers(ws: ExtendedWebSocket) {
+//         if (ws.userId) {
+//             const userConnections = this.userConnections.get(ws.userId);
+//             if (userConnections) {
+//                 const index = userConnections.indexOf(ws);
+//                 if (index !== -1) {
+//                     userConnections.splice(index, 1);
+//                     if (userConnections.length === 0) {
+//                         this.userConnections.delete(ws.userId);
+//                     }
+//                 }
+//             }
+//         }
+//     }
 
-    public broadcastToGame(gameId: string, message: any) {
-        const stringifiedMsg = JSON.stringify(message);
-        const connections = this.gameConnections.get(gameId);
+//     // general purpose broadcasts
+//     public broadcast(message: string) {
+//         this.wss.clients.forEach((client) => {
+//             if (client.readyState === WebSocket.OPEN) {
+//                 client.send(message);
+//             }
+//         });
+//     }
 
-        if (connections) {
-            connections.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(stringifiedMsg);
-                }
-            });
-        }
-    }
+//     public broadcastToGame(gameId: string, message: GameMsg) {
+//         const stringifiedMsg = JSON.stringify(message);
+//         const connections = this.gameConnections.get(gameId);
 
-    public broadcastToUser(userId: string, message: any) {
-        const stringifiedMsg = JSON.stringify(message);
-        const connections = this.userConnections.get(userId);
+//         if (connections) {
+//             connections.forEach((client) => {
+//                 if (client.readyState === WebSocket.OPEN) {
+//                     client.send(stringifiedMsg);
+//                 }
+//             });
+//         }
+//     }
 
-        if (connections) {
-            connections.forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                    client.send(stringifiedMsg);
-                }
-            });
-        }
-    }
+//     public broadcastToUser(userId: string, message: string) {
+//         const stringifiedMsg = JSON.stringify(message);
+//         const connections = this.userConnections.get(userId);
 
-    private async handlePlayerReady(ws: ExtendedWebSocket, gameID: string) {
-        if (!ws.userId) return;
+//         if (connections) {
+//             connections.forEach((client) => {
+//                 if (client.readyState === WebSocket.OPEN) {
+//                     client.send(stringifiedMsg);
+//                 }
+//             });
+//         }
+//     }
 
-        if (!gameID) {
-            this.sendJsonWebSocketMessage(ws, {
-                type: 'error',
-                message: 'Provide a valid game ID.'
-            });
+//     private async handlePlayerReady(ws: ExtendedWebSocket, gameID: string) {
+//         if (!ws.userId) return;
 
-            return;
-        }
+//         if (!gameID) {
+//             this.sendJsonWebSocketMessage(ws, {
+//                 type: 'error',
+//                 message: 'Provide a valid game ID.'
+//             });
 
-        try {
-            // Get game data from Redis first
-            const cache = await this.redisClient.hgetall(`game:${gameID}`);
+//             return;
+//         }
 
-            if (!cache) {
-                this.sendJsonWebSocketMessage(ws, {
-                    type: 'error',
-                    message: 'Game not found.'
-                });
+//         try {
+//             // Get game data from Redis first
+//             const cache = await this.redisClient.hgetall(`game:${gameID}`);
 
-                return;
-            }
+//             if (!cache) {
+//                 this.sendJsonWebSocketMessage(ws, {
+//                     type: 'error',
+//                     message: 'Game not found.'
+//                 });
 
-            const gameData = cache;
+//                 return;
+//             }
 
-            if (!this.playerReadyStates.has(gameID)) {
-                this.playerReadyStates.set(gameID, new Set());
-            }
+//             const gameData = cache;
 
-            const readyPlayers = this.playerReadyStates.get(gameID)!;
-            readyPlayers.add(ws.userId);
+//             if (!this.playerReadyStates.has(gameID)) {
+//                 this.playerReadyStates.set(gameID, new Set());
+//             }
 
-            const whitePlayer = JSON.parse(gameData.whitePlayer);
-            const blackPlayer = JSON.parse(gameData.blackPlayer);
+//             const readyPlayers = this.playerReadyStates.get(gameID)!;
+//             readyPlayers.add(ws.userId);
 
-            // Check if both correct players are ready
-            if (
-                readyPlayers.size === 2 &&
-                readyPlayers.has(whitePlayer.id) &&
-                readyPlayers.has(blackPlayer.id)
-            ) {
-                this.broadcastToGame(gameID, {
-                    type: 'game_start',
-                    game: {
-                        startTime: Date.now(),
-                        duration: parseInt(gameData.duration),
-                        state: gameData.state,
-                        whitePlayer: gameData.whitePlayer,
-                        blackPlayer: gameData.blackPlayer
-                    }
-                });
-            } else {
-                this.broadcastToGame(gameID, {
-                    type: 'waiting_for_opponent',
-                    readyPlayers: Array.from(readyPlayers)
-                });
-            }
+//             const whitePlayer = JSON.parse(gameData.whitePlayer);
+//             const blackPlayer = JSON.parse(gameData.blackPlayer);
 
-            logger.info('Done with player ready message.');
-        } catch (err) {
-            logger.error(err);
+//             // Check if both correct players are ready
+//             if (
+//                 readyPlayers.size === 2 &&
+//                 readyPlayers.has(whitePlayer.id) &&
+//                 readyPlayers.has(blackPlayer.id)
+//             ) {
+//                 this.broadcastToGame(gameID, {
+//                     type: 'game_start',
+//                     game: {
+//                         startTime: Date.now(),
+//                         duration: parseInt(gameData.duration),
+//                         state: gameData.state,
+//                         whitePlayer: gameData.whitePlayer,
+//                         blackPlayer: gameData.blackPlayer
+//                     }
+//                 });
+//             } else {
+//                 // TODO: standardize this
+//                 this.broadcastToGame(gameID, {
+//                     type: 'waiting_for_opponent',
+//                     readyPlayers: Array.from(readyPlayers)
+//                 });
+//             }
 
-            this.sendJsonWebSocketMessage(ws, {
-                type: 'error',
-                message: 'Failed to handle ready state.'
-            });
-        }
-    }
+//             logger.info('Done with player ready message.');
+//         } catch (err) {
+//             logger.error(err);
 
-    private async handleMove(ws: ExtendedWebSocket, data: GameMove) {
-        if (!ws.userId) {
-            this.sendJsonWebSocketMessage(ws, {
-                type: 'error',
-                message: 'Unauthenticated.'
-            });
+//             this.sendJsonWebSocketMessage(ws, {
+//                 type: 'error',
+//                 message: 'Failed to handle ready state.'
+//             });
+//         }
+//     }
 
-            return;
-        }
+//     private async handleMove(ws: ExtendedWebSocket, data: GameMove) {
+//         if (!ws.userId) {
+//             this.sendJsonWebSocketMessage(ws, {
+//                 type: 'error',
+//                 message: 'Unauthenticated.'
+//             });
 
-        if (data && data.gameID) {
-            try {
-                const gameData = await this.redisClient.hgetall(
-                    `game:${data.gameID}`
-                );
+//             return;
+//         }
 
-                if (!gameData) {
-                    this.sendJsonWebSocketMessage(ws, {
-                        type: 'error',
-                        message: 'Game not found.'
-                    });
+//         if (data && data.gameID) {
+//             try {
+//                 const gameData = await this.redisClient.hgetall(
+//                     `game:${data.gameID}`
+//                 );
 
-                    return;
-                }
+//                 if (!gameData) {
+//                     this.sendJsonWebSocketMessage(ws, {
+//                         type: 'error',
+//                         message: 'Game not found.'
+//                     });
 
-                logger.info(
-                    `Game ${data.gameID} data: ${JSON.stringify(gameData)}`
-                );
+//                     return;
+//                 }
 
-                const parsedState: GameState = JSON.parse(gameData.state);
-                const whitePlayer = JSON.parse(gameData.whitePlayer);
+//                 logger.info(
+//                     `Game ${data.gameID} data: ${JSON.stringify(gameData)}`
+//                 );
 
-                const chess = new Chess(parsedState.fen);
-                const playerColor =
-                    whitePlayer.username === data.username ? 'w' : 'b';
+//                 const parsedState: GameState = JSON.parse(gameData.state);
+//                 const whitePlayer = JSON.parse(gameData.whitePlayer);
 
-                // Turn and move validations
-                if (parsedState.turn != playerColor) {
-                    this.sendJsonWebSocketMessage(ws, {
-                        type: 'error',
-                        message: 'Not your turn.'
-                    });
+//                 const chess = new Chess(parsedState.fen);
+//                 const playerColor =
+//                     whitePlayer.username === data.username ? 'w' : 'b';
 
-                    return;
-                }
+//                 // Turn and move validations
+//                 if (parsedState.turn != playerColor) {
+//                     this.sendJsonWebSocketMessage(ws, {
+//                         type: 'error',
+//                         message: 'Not your turn.'
+//                     });
 
-                // Attempt to make chess move
-                try {
-                    const newMove = chess.move({
-                        from: data.from,
-                        to: data.to,
-                        promotion: data.promotion
-                    });
+//                     return;
+//                 }
 
-                    const newState = {
-                        ...parsedState,
-                        fen: chess.fen(),
-                        pgn: chess.pgn(),
-                        turn: chess.turn(),
-                        inCheck: chess.inCheck(),
-                        isCheckmate: chess.isCheckmate(),
-                        isDraw: chess.isDraw(),
-                        isGameOver: chess.isGameOver(),
-                        whiteTTP: data.whiteTTP,
-                        blackTTP: data.blackTTP
-                    };
+//                 // Attempt to make chess move
+//                 try {
+//                     const newMove = chess.move({
+//                         from: data.from,
+//                         to: data.to,
+//                         promotion: data.promotion
+//                     });
 
-                    await this.redisClient.hset(
-                        `game:${data.gameID}`,
-                        'state',
-                        JSON.stringify(newState)
-                    );
+//                     const newState = {
+//                         ...parsedState,
+//                         fen: chess.fen(),
+//                         pgn: chess.pgn(),
+//                         turn: chess.turn(),
+//                         inCheck: chess.inCheck(),
+//                         isCheckmate: chess.isCheckmate(),
+//                         isDraw: chess.isDraw(),
+//                         isGameOver: chess.isGameOver(),
+//                         whiteTTP: data.whiteTTP,
+//                         blackTTP: data.blackTTP
+//                     };
 
-                    const startTime = Date.now();
+//                     await this.redisClient.hset(
+//                         `game:${data.gameID}`,
+//                         'state',
+//                         JSON.stringify(newState)
+//                     );
 
-                    // Notify players
-                    this.broadcastToGame(data.gameID, {
-                        type: 'move',
-                        startTime,
-                        move: newMove,
-                        state: newState,
-                        duration: parseInt(gameData.duration)
-                    });
+//                     const startTime = Date.now();
 
-                    // Acknowledge move to sender
-                    this.sendJsonWebSocketMessage(ws, {
-                        type: 'move_accepted',
-                        startTime,
-                        gameId: data.gameID,
-                        state: newState,
-                        duration: parseInt(gameData.duration)
-                    });
-                } catch (error) {
-                    logger.error(error);
-                    this.sendJsonWebSocketMessage(ws, {
-                        type: 'error',
-                        message: 'Invalid move.'
-                    });
+//                     // Notify players
+//                     this.broadcastToGame(data.gameID, {
+//                         type: 'move',
+//                         startTime,
+//                         move: newMove,
+//                         state: newState,
+//                         duration: parseInt(gameData.duration)
+//                     });
 
-                    return;
-                }
-            } catch (err) {
-                logger.error(err);
-                this.sendJsonWebSocketMessage(ws, {
-                    type: 'error',
-                    message: err.message ?? 'This move could not be made.'
-                });
-            }
-        }
-    }
+//                     // Acknowledge move to sender
+//                     this.sendJsonWebSocketMessage(ws, {
+//                         type: 'move_accepted',
+//                         startTime,
+//                         gameId: data.gameID,
+//                         state: newState,
+//                         duration: parseInt(gameData.duration)
+//                     });
+//                 } catch (error) {
+//                     logger.error(error);
+//                     this.sendJsonWebSocketMessage(ws, {
+//                         type: 'error',
+//                         message: 'Invalid move.'
+//                     });
 
-    private handleDisconnect(ws: ExtendedWebSocket) {
-        if (!ws.userId) return;
+//                     return;
+//                 }
+//             } catch (err) {
+//                 logger.error(err);
+//                 this.sendJsonWebSocketMessage(ws, {
+//                     type: 'error',
+//                     message: err.message ?? 'This move could not be made.'
+//                 });
+//             }
+//         }
+//     }
 
-        // Remove from ready states for all games
-        this.gameConnections.forEach((connections, gameId) => {
-            const readyPlayers = this.playerReadyStates.get(gameId);
-            if (readyPlayers?.has(ws.userId!)) {
-                readyPlayers.delete(ws.userId!);
-                // Notify other players
-                this.broadcastToGame(
-                    gameId,
-                    JSON.stringify({
-                        type: 'player_disconnected',
-                        userId: ws.userId
-                    })
-                );
-            }
-        });
+//     private handleDisconnect(ws: ExtendedWebSocket) {
+//         if (!ws.userId) return;
 
-        this.removeFromGames(ws);
-        this.removeFromUsers(ws);
-    }
+//         // Remove from ready states for all games
+//         this.gameConnections.forEach((connections, gameId) => {
+//             const readyPlayers = this.playerReadyStates.get(gameId);
+//             if (readyPlayers?.has(ws.userId!)) {
+//                 readyPlayers.delete(ws.userId!);
+//                 // Notify other players
+//                 this.broadcastToGame(
+//                     gameId,
+//                     JSON.stringify({
+//                         type: 'player_disconnected',
+//                         userId: ws.userId
+//                     })
+//                 );
+//             }
+//         });
 
-    private sendJsonWebSocketMessage(ws: ExtendedWebSocket, msg: any) {
-        const stringifiedMsg = JSON.stringify(msg);
-        ws.send(stringifiedMsg);
-    }
-}
+//         this.removeFromGames(ws);
+//         this.removeFromUsers(ws);
+//     }
+
+//     private sendJsonWebSocketMessage(ws: ExtendedWebSocket, msg: object) {
+//         const stringifiedMsg = JSON.stringify(msg);
+//         ws.send(stringifiedMsg);
+//     }
+// }
