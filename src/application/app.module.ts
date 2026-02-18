@@ -64,7 +64,7 @@ export async function startApplication() {
 
     application.listen(port, () => {
         logger.info(
-            `Server application started, running in [${config.app.environment.mode}] @ ${config.app.address}`
+            `Server application started. Running in [${config.app.environment.mode}] @ ${config.app.address}`
         );
     });
 }
