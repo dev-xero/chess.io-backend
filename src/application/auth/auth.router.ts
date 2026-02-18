@@ -3,6 +3,15 @@ import { authService } from './auth.service';
 
 export const authRouter = Router();
 
+/**
+ * @openapi
+ * /:
+ *   get:
+ *     description: Welcome to swagger-jsdoc!
+ *     responses:
+ *       200:
+ *         description: Returns a mysterious string.
+ */
 authRouter.post(
     '/register',
     async (req: Request, res: Response, next: NextFunction) => {
@@ -20,9 +29,9 @@ authRouter.post(
 authRouter.post(
     '/reset-password',
     async (req: Request, res: Response, next: NextFunction) => {
-        await authService.resetPassword(req, res, next)
+        await authService.resetPassword(req, res, next);
     }
-)
+);
 
 authRouter.get(
     '/logout',
