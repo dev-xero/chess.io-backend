@@ -15,9 +15,9 @@
  * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import { databaseManager } from '@core/providers';
-import { shutdown } from '@core/utils/shutdown';
-import { startApplication } from './application';
+import { databaseManager } from '@/database';
+import { shutdown } from '@/utils/shutdown';
+import { startApplication } from './app';
 
 async function startServer() {
     try {

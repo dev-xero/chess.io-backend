@@ -140,7 +140,7 @@ const config = {
       "value": "prisma-client-js"
     },
     "output": {
-      "value": "/Users/xero/Projects/Web/chessio/chessio-backend/src/generated/cilent",
+      "value": "/Users/xero/Projects/Web/chessio/chessio-backend/src/cilent",
       "fromEnvVar": null
     },
     "config": {
@@ -158,10 +158,10 @@ const config = {
     "isCustomOutput": true
   },
   "relativeEnvPaths": {
-    "rootEnvPath": "../../../.env",
-    "schemaEnvPath": "../../../.env"
+    "rootEnvPath": "../../.env",
+    "schemaEnvPath": "../../.env"
   },
-  "relativePath": "../../../prisma",
+  "relativePath": "../../prisma",
   "clientVersion": "5.22.0",
   "engineVersion": "605197351a3c8bdd595af2d2a9bc3025bca48ea2",
   "datasourceNames": [
@@ -177,8 +177,8 @@ const config = {
       }
     }
   },
-  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/cilent\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"PG_DATABASE_URL\")\n}\n\nmodel Player {\n  id             String       @id @default(uuid())\n  username       String       @unique\n  password       String\n  secretQuestion String\n  authToken      String?\n  rating         Int\n  stats          PlayerStats?\n  joinedOn       DateTime\n}\n\nmodel PlayerStats {\n  statID      String @id @default(uuid())\n  player      Player @relation(fields: [playerID], references: [id])\n  playerID    String @unique\n  rating      Int\n  gamesPlayed Int\n  wins        Int\n  losses      Int\n}\n",
-  "inlineSchemaHash": "fd93642a6a4a62de06a4ae6d0bcc982c88fac5f2b68a6e7e7e3df19874529967",
+  "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/cilent\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"PG_DATABASE_URL\")\n}\n\nmodel Player {\n  id             String       @id @default(uuid())\n  username       String       @unique\n  password       String\n  secretQuestion String\n  authToken      String?\n  rating         Int\n  stats          PlayerStats?\n  joinedOn       DateTime\n}\n\nmodel PlayerStats {\n  statID      String @id @default(uuid())\n  player      Player @relation(fields: [playerID], references: [id])\n  playerID    String @unique\n  rating      Int\n  gamesPlayed Int\n  wins        Int\n  losses      Int\n}\n",
+  "inlineSchemaHash": "4f0709ffa7b7bf6751213bb90bb086681f2cbf7323128ae5cb90e01f9189f10c",
   "copyEngine": true
 }
 config.dirname = '/'

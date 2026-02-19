@@ -22,10 +22,6 @@
         "baseUrl": "./",
         "paths": {
             "@/*": ["src/*"],
-            "@app/*": ["src/application/*"],
-            "@core/*": ["src/core/*"],
-            "@constants/*": ["src/constants/*"],
-            "@generated/*": ["src/generated/*"]
         },
     },
     "exclude": [

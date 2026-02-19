@@ -15,11 +15,11 @@
  * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import { logger } from '@/core';
-import { HttpStatus } from '@constants/index';
-import { config, corsOptions } from '@core/config';
-import { NotFoundErrorHandler } from '@core/handlers';
-import { ErrorHandler } from '@core/middlewares';
+import { logger } from '@/logging';
+import { HttpStatus } from '@/config/constants';
+import { envConfig, corsOptions } from '@/config';
+import { NotFoundErrorHandler } from '@/handlers';
+import { ErrorHandler } from '@/middleware';
 import compression from 'compression';
 import cors from 'cors';
 import express, { Request, Response } from 'express';
@@ -40,7 +40,7 @@ export async function startApplication() {
     const wsServer = expressWs(expressServer);
 
     const application = wsServer.app;
-    const port = config.app.port;
+    const port = envConfig.app.port;
 
     configureMiddleware(application);
     configureOpenApi(application);
@@ -48,7 +48,7 @@ export async function startApplication() {
 
     application.listen(port, () => {
         logger.info(
-            `Server application started. Running in [${config.app.environment.mode}] @ ${config.app.address}`
+            `Server application started. Running in [${envConfig.app.environment.mode}] @ ${envConfig.app.address}`
         );
     });
 }

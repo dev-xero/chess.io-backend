@@ -1,8 +1,7 @@
-import { IRegisterUser } from '@app/auth/interfaces/register.interface';
-import { DEFAULT_RATING } from '@constants/chess';
-import { logger } from '@core/logging';
-import { databaseManager } from '@core/providers';
-import { Player, PrismaClient } from '@generated/cilent';
+import { DEFAULT_RATING } from '@/config/constants';
+import { logger } from '@/logging';
+import { databaseManager } from '@/database';
+import { Player, PrismaClient } from '@/cilent';
 
 type PlayerUpdateData = {
     password?: string;

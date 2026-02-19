@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction, Router } from 'express';
 import { GameService } from './game.service';
-import { isAuthorized } from '@core/middlewares';
+import { isAuthorized } from '@/middleware';
 import { HttpStatus } from '@constants/status.codes';
-import { logger } from '@core/logging';
-import { ApplicationError, BadRequestError } from '@core/errors';
+import { logger } from '@/logging';
+import { ApplicationError, BadRequestError } from '@/errors';
 
 export function createGameRouter(gameService: GameService) {
     const gameRouter = Router();

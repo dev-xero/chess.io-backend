@@ -1,8 +1,7 @@
-import { BadRequestError } from '@core/errors';
-import { dispatch } from '@core/events';
-import { logger } from '@core/logging';
-import { RedisClient } from '@core/providers';
-import { WebSocketManager } from '@core/websocket';
+import { BadRequestError } from '@/errors';
+import { dispatch } from '@/events';
+import { logger } from '@/logging';
+// import { WebSocketManager } from '@/websocket';
 import { Chess } from 'chess.js';
 import {
     AcceptedGame,
@@ -10,13 +9,14 @@ import {
     GamePlayer,
     GameState
 } from './interfaces/game.interfaces';
+import Redis from 'ioredis';
 
 type ChessGameDuration = 600000 | 300000 | 180000;
 
 export class GameService {
     constructor(
-        private redisClient: RedisClient,
-        private wsManager: WebSocketManager
+        private redisClient: Redis,
+        // private wsManager: WebSocketManager
     ) {}
 
     public async createPendingChallenge(
@@ -94,17 +94,17 @@ export class GameService {
         await this.redisClient.del(`pending:${challengeID}`);
 
         // Broadcast game started event to target clients
-        this.wsManager.broadcastToUser(challenger.id, {
-            type: 'challenge_accepted',
-            gameID,
-            gameState
-        });
+        // this.wsManager.broadcastToUser(challenger.id, {
+        //     type: 'challenge_accepted',
+        //     gameID,
+        //     gameState
+        // });
 
-        this.wsManager.broadcastToUser(opponent.id, {
-            type: 'challenge_accepted',
-            gameID,
-            gameState
-        });
+        // this.wsManager.broadcastToUser(opponent.id, {
+        //     type: 'challenge_accepted',
+        //     gameID,
+        //     gameState
+        // });
 
         dispatch('game:accepted', [gameID]);
 

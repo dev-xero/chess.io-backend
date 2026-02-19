@@ -15,10 +15,10 @@
   FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
   ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-import { PrismaClient } from '@generated/cilent';
-import { logger } from '../logging';
+import { PrismaClient } from '@/cilent';
 import Redis from 'ioredis';
-import { config } from '../config';
+import { envConfig } from '../config';
+import { logger } from '../logging';
 
 /**
  * This class is responsible for managing the main database connections.
@@ -31,7 +31,7 @@ class DatabaseManager {
 
     constructor() {
         this.prisma = new PrismaClient();
-        this.redis = new Redis(config.redis.uri);
+        this.redis = new Redis(envConfig.redis.uri);
     }
 
     /**

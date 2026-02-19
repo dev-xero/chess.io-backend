@@ -1,5 +1,5 @@
 import { config } from '@core/config';
-import { logger } from '@core/logging';
+import { logger } from '@/logging';
 
 const registry = {
     'app:up': [

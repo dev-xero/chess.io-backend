@@ -1,23 +1,23 @@
-import { BadRequestError, UnauthorizedError } from '@core/errors';
-import { dispatch } from '@core/events';
-import { Player } from '@generated/cilent';
+import { BadRequestError, UnauthorizedError } from '@/errors';
+import { dispatch } from '@/events';
+import { Player } from '@/cilent';
 import { NextFunction, Request, Response } from 'express';
-import { userService } from '@app/user';
-import { HttpStatus, TOKEN_EXPIRES_IN } from '@constants/index';
-import { validateReqBody } from '@core/utils/validator';
-import { registerReqBody } from '@core/schemas';
-import { JWT, hashManager, omitFields } from '@core/utils';
-import { config } from '@core/config';
-import { loginReqBody } from '@core/schemas/login.req.schema';
+import { userService } from '@/app/user';
+import { HttpStatus, TOKEN_EXPIRES_IN } from '@/config/constants';
+import { validateReqBody } from '@/utils/validator';
+import { registerReqBody } from '@/schemas';
+import { JWT, hashManager, omitFields } from '@/utils';
+import { envConfig } from '@/config';
+import { loginReqBody } from '@/schemas/login.req.schema';
 import { ILoginRequest, IRegisterUser } from './interfaces';
 import { IResetBody } from './interfaces/reset.interface';
-import { logger } from '@core/logging';
+import { logger } from '@/logging';
 
 class AuthService {
     private tokens: JWT;
 
     constructor() {
-        this.tokens = new JWT(config.auth.secret);
+        this.tokens = new JWT(envConfig.auth.secret);
     }
 
     public async register(req: Request, res: Response, next: NextFunction) {

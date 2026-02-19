@@ -1,9 +1,9 @@
-import { ENVIRONMENT } from '../utils';
+import { ENVIRONMENT } from '@/utils';
 import dotenv from 'dotenv';
 
 dotenv.config();
 
-export const config = Object.freeze({
+export const envConfig = Object.freeze({
     app: {
         port: parseInt(process.env.PORT || '8080'),
         environment: {

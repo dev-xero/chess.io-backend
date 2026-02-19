@@ -1,4 +1,4 @@
-import { JwtClaims } from '@core/utils';
+import { JwtClaims } from '@/utils';
 
 declare global {
     namespace Express {

@@ -19,26 +19,26 @@
     "license": "GPL-3.0",
     "description": "Backend for chess.io",
     "devDependencies": {
-        "@eslint/js": "^9.39.1",
+        "@eslint/js": "^9.39.2",
         "@types/compression": "^1.8.1",
         "@types/cors": "^2.8.19",
-        "@types/express": "^5.0.5",
+        "@types/express": "^5.0.6",
         "@types/express-ws": "^3.0.6",
         "@types/jsonwebtoken": "^9.0.10",
-        "@types/node": "^22.19.1",
+        "@types/node": "^22.19.11",
         "@types/swagger-jsdoc": "^6.0.4",
         "@types/swagger-ui-express": "^4.1.8",
         "@types/uuid": "^10.0.0",
-        "eslint": "^9.39.1",
+        "eslint": "^9.39.2",
         "globals": "^15.15.0",
         "nodemon": "^3.1.11",
-        "prettier": "^3.6.2",
+        "prettier": "^3.8.1",
         "prisma": "^5.22.0",
         "ts-node": "^10.9.2",
         "tsc-alias": "^1.8.16",
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.46.4"
+        "typescript-eslint": "^8.56.0"
     },
     "dependencies": {
         "@prisma/client": "^5.22.0",
@@ -47,41 +47,29 @@
         "@types/ws": "^8.18.1",
         "app-root-path": "^3.1.0",
         "argon2": "^0.44.0",
-        "body-parser": "^1.20.3",
+        "body-parser": "^1.20.4",
         "chess.js": "^1.4.0",
         "compression": "^1.8.1",
-        "cors": "^2.8.5",
+        "cors": "^2.8.6",
         "dotenv": "^16.6.1",
         "eventemitter2": "^6.4.9",
-        "express": "^4.21.2",
+        "express": "^4.22.1",
         "express-ws": "^5.0.2",
         "format": "^0.2.2",
         "helmet": "^8.1.0",
-        "ioredis": "^5.8.2",
+        "ioredis": "^5.9.3",
         "joi": "^17.13.3",
-        "jsonwebtoken": "^9.0.2",
+        "jsonwebtoken": "^9.0.3",
         "resolve-tspaths": "^0.8.23",
         "swagger-jsdoc": "^6.2.8",
         "swagger-ui-express": "^5.0.1",
         "uuid": "^10.0.0",
-        "winston": "^3.18.3",
-        "ws": "^8.18.3"
+        "winston": "^3.19.0",
+        "ws": "^8.19.0"
     },
     "_moduleAliases": {
         "@/*": [
             "src/*"
-        ],
-        "@app/*": [
-            "src/application/*"
-        ],
-        "@core/*": [
-            "src/core/*"
-        ],
-        "@constants/*": [
-            "src/constants/*"
-        ],
-        "@generated/*": [
-            "src/generated/*"
         ]
     }
 }

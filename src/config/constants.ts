@@ -1,3 +1,8 @@
+export const HttpHeadersContentType = {
+    OCTECT_STREAM: 'application/octet-stream',
+    JSON: 'application/json'
+};
+
 export const HttpStatus = {
     OK: 200,
     CREATED: 201,
@@ -11,3 +16,7 @@ export const HttpStatus = {
     UNPROCESSABLE: 422,
     INTERNAL_SERVER_ERROR: 500
 };
+
+export const SALT_ROUNDS = 10;
+export const TOKEN_EXPIRES_IN = '1hr';
+export const DEFAULT_RATING = 1200;

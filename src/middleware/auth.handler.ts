@@ -1,6 +1,6 @@
 import { UnauthorizedError } from '@core/errors';
 import { NextFunction, Request, Response } from 'express';
-import { JWT } from '@core/utils';
+import { JWT } from '@/utils';
 import { config } from '@core/config';
 import { logger } from '@core/logging';
 
