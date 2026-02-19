@@ -1,19 +1,19 @@
 /**
  * Copyright (C) dev-xero 2024-2026
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and 
- * associated documentation files (the "Software"), to deal in the Software without restriction, 
- * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
- * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, 
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+ * associated documentation files (the "Software"), to deal in the Software without restriction,
+ * including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or 
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, 
-  INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR 
-  PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
-  FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
-  ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+ * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
+ * PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
+ * FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import { logger } from '@/core';
 import { HttpStatus } from '@constants/index';
@@ -76,7 +76,7 @@ function configureOpenApi(application: Application) {
         definition: {
             openapi: '3.0.0',
             info: {
-                title: '',
+                title: 'Chess.io API Specification',
                 version: '1.0.0'
             }
         },
@@ -95,18 +95,17 @@ function configureEndpoints(application: Application) {
     const notFoundHandler = new NotFoundErrorHandler();
     const errorHandler = new ErrorHandler();
 
-    application.use('/v1', appRouter);
-    application.use('/v1/auth', authRouter);
-
     application.get('/', (_: Request, res: Response) => {
         res.status(HttpStatus.OK).json({
-            message:
-                'ChessIO backend server. Prefix routes with v1 to use the API.',
+            message: 'Status online, prefix routes with /v1 to use the API',
+            docs: '/v1/docs',
             success: true,
             code: HttpStatus.OK
         });
     });
 
+    application.use('/v1', appRouter);
+    application.use('/v1/auth', authRouter);
     application.use(notFoundHandler.handle);
     application.use(errorHandler.handle);
 }
