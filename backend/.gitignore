@@ -40,4 +40,4 @@ docker-compose.override.yml
 
 TODO
 
-src/client/
+src/generated/prisma/

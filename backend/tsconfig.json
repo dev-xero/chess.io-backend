@@ -1,32 +1,32 @@
 {
-    "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "nodenext",
-        "declaration": false,
-        "removeComments": true,
-        "emitDecoratorMetadata": true,
-        "experimentalDecorators": true,
-        "allowSyntheticDefaultImports": true,
-        "target": "es2017",
-        "sourceMap": true,
-        "outDir": "./build",
-        "rootDir": "src",
-        "incremental": true,
-        "skipLibCheck": true,
-        "strictNullChecks": true,
-        "noImplicitAny": true,
-        "strictBindCallApply": true,
-        "forceConsistentCasingInFileNames": true,
-        "noFallthroughCasesInSwitch": true,
-        "esModuleInterop": true,
-        "baseUrl": "./",
-        "paths": {
-            "@/*": ["src/*"],
-        },
-    },
-    "exclude": [
-      "node_modules",
-      "build",
-      "src/generated/**/*"
-    ]
+  "compilerOptions": {
+      "rootDir": "./",
+      "module": "NodeNext",
+      "moduleResolution": "nodenext",
+      "declaration": false,
+      "removeComments": true,
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "allowSyntheticDefaultImports": true,
+      "target": "es2017",
+      "sourceMap": true,
+      "outDir": "./build",
+      "incremental": true,
+      "skipLibCheck": true,
+      "strictNullChecks": true,
+      "noImplicitAny": true,
+      "strictBindCallApply": true,
+      "forceConsistentCasingInFileNames": true,
+      "noFallthroughCasesInSwitch": true,
+      "esModuleInterop": true,
+      "baseUrl": "./",
+      "paths": {
+          "@/*": ["src/*"],
+      },
+  },
+  "exclude": [
+    "node_modules",
+    "build",
+    "src/generated/**/*"
+  ]
 }
