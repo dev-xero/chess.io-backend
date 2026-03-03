@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '@core/errors';
+import { UnauthorizedError } from '@/errors';
 import { Schema } from 'joi';
 
 export const validateReqBody = (schema: Schema, obj: any) => {

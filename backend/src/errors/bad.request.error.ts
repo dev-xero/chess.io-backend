@@ -1,4 +1,4 @@
-import { HttpStatus } from '@constants/index';
+import { HttpStatus } from '@/config/constants';
 import { ApplicationError, ErrorDetailsDescriptor } from './application.error';
 
 export class BadRequestError extends ApplicationError {

@@ -1,11 +1,11 @@
-import { config } from '@core/config';
+import { envConfig } from '@/config';
 import { logger } from '@/logging';
 
 const registry = {
     'app:up': [
         () =>
             logger.info(
-                `Server started at ${config.app.address} in ${config.app.environment.mode} environment.`
+                `Server started at ${envConfig.app.address} in ${envConfig.app.environment.mode} environment.`
             )
     ],
     'app:internal:error': [
@@ -15,15 +15,19 @@ const registry = {
                 err.message
             )
     ],
-    'auth:registered': [(user: string) => logger.info(`successfully registered new user: ${user}.`)],
-    'auth:logged_out': [(user: string) => logger.info(`successfully logged out user: ${user}.`)],
+    'auth:registered': [
+        (user: string) =>
+            logger.info(`successfully registered new user: ${user}.`)
+    ],
+    'auth:logged_out': [
+        (user: string) => logger.info(`successfully logged out user: ${user}.`)
+    ],
     'event:registration:successful': [
         () => logger.info('Events listeners registered.')
     ],
     'db:setup:success': [() => logger.info('Database connected successfully.')],
     'db:setup:failed': [
-        (err: Error) =>
-            logger.error('Database failed to connect.\nError:', err)
+        (err: Error) => logger.error('Database failed to connect.\nError:', err)
     ],
     'db:disconnected': [() => logger.warn('Database disconnected.')],
     'game:update': [() => logger.info('Game update dispatched.')],

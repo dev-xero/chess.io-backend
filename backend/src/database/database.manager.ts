@@ -16,6 +16,7 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 import { PrismaClient } from '@/generated/prisma';
+import { PrismaPg } from '@prisma/adapter-pg';
 import Redis from 'ioredis';
 import { envConfig } from '../config';
 import { logger } from '../logging';
@@ -30,7 +31,10 @@ class DatabaseManager {
     private redis: Redis;
 
     constructor() {
-        this.prisma = new PrismaClient();
+        const adapter = new PrismaPg({
+            connectionString: process.env.DATABASE_URL!
+        });
+        this.prisma = new PrismaClient({ adapter });
         this.redis = new Redis(envConfig.redis.uri);
     }
 

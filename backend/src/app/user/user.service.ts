@@ -1,7 +1,8 @@
 import { DEFAULT_RATING } from '@/config/constants';
 import { logger } from '@/logging';
 import { databaseManager } from '@/database';
-import { Player, PrismaClient } from '@/cilent';
+import { Player, PrismaClient } from '@/generated/prisma';
+import { IRegisterUser } from '../auth';
 
 type PlayerUpdateData = {
     password?: string;

@@ -1,8 +1,8 @@
-import { UnauthorizedError } from '@core/errors';
+import { UnauthorizedError } from '@/errors';
 import { NextFunction, Request, Response } from 'express';
 import { JWT } from '@/utils';
-import { config } from '@core/config';
-import { logger } from '@core/logging';
+import { logger } from '@/logging';
+import { envConfig } from '@/config';
 
 // ! TODO: Rename 'handlers' into 'middleware'
 class AuthHandler {
@@ -15,7 +15,7 @@ class AuthHandler {
             );
         }
 
-        const jwt = new JWT(config.auth.secret);
+        const jwt = new JWT(envConfig.auth.secret);
         const token = authHeader.split(' ')[1];
 
         let decodedToken;

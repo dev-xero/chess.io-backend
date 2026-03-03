@@ -1,4 +1,4 @@
-import { NotFoundError } from '@core/errors';
+import { NotFoundError } from '@/errors';
 import { NextFunction, Request, Response } from 'express';
 
 export class NotFoundErrorHandler {

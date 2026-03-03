@@ -1,6 +1,6 @@
-import { HttpStatus } from '@constants/index';
-import { ApplicationError } from '@core/errors';
-import { logger } from '@core/logging';
+import { HttpStatus } from '@/config/constants';
+import { ApplicationError } from '@/errors';
+import { logger } from '@/logging';
 import { Request, Response } from 'express';
 
 export class ErrorHandler {
