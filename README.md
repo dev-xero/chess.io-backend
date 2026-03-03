@@ -1,3 +1,3 @@
-# Chess[dot]io
+## Chess.io
 
-WIP.
+🚧 Major updates in progress. 🚧
